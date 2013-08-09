@@ -7,7 +7,7 @@ License: WTFPL
 Dependencies: Qt 4.8
 OS: any supported by Qt
 
-Linked projects: [lauloid], [Rocaloid]
+Linked projects: [lauloid] [1], [Rocaloid] [2]
 
 Discussion: issues here or #vocadb at irc.rizon.net
 
