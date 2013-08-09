@@ -85,12 +85,12 @@ class qtauEvent_NoteMove : public qtauEvent
 public:
     typedef struct {
         quint64 id;
-        int pulseOffset;
+        int pulseOffDelta;
         int keyNumber;
         int prevKeyNumber;
 
-        QString toString() const { return QString("id: %1 pulse offset: %2 key number: %3 key number was: %4")
-                    .arg(id).arg(pulseOffset).arg(keyNumber).arg(prevKeyNumber); }
+        QString toString() const { return QString("id: %1 pulseOffDelta: %2 key number: %3 key number was: %4")
+                    .arg(id).arg(pulseOffDelta).arg(keyNumber).arg(prevKeyNumber); }
     } noteMoveData;
 
     typedef QVector<noteMoveData> noteMoveVector;

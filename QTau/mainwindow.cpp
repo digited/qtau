@@ -402,8 +402,8 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
 
     connect(doc, SIGNAL(dataReloaded()),       SLOT(onDocReloaded()));
     connect(doc, SIGNAL(modifiedStatus(bool)), SLOT(onDocStatus(bool)));
-    connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onUndoStatus(bool)));
-    connect(doc, SIGNAL(undoStatus(bool)),     SLOT(onRedoStatus(bool)));
+    connect(doc, SIGNAL(undoStatus(bool)),     SLOT(onUndoStatus(bool)));
+    connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onRedoStatus(bool)));
 
     connect(doc, SIGNAL(onEvent(qtauEvent*)), SLOT(onDocEvent(qtauEvent*)));
     //-----------------------------------------------------------------------
@@ -419,8 +419,8 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     //-----------------------------------------------------------------------
 
     // widget configuration - maybe read app settings here?
-    noteEditor->setRMBScrollEnabled(!ui->actionEdit_Mode->isEnabled());
-    noteEditor->setEditingEnabled  ( ui->actionEdit_Mode->isEnabled());
+    noteEditor->setRMBScrollEnabled(!ui->actionEdit_Mode->isChecked());
+    noteEditor->setEditingEnabled  ( ui->actionEdit_Mode->isChecked());
 
     return true;
 }
@@ -535,12 +535,18 @@ void MainWindow::onReplay()
 
 void MainWindow::onUndo()
 {
-    qDebug() << "Undo";
+    if (doc->canUndo())
+        doc->undo();
+    else
+        ui->actionUndo->setEnabled(false);
 }
 
 void MainWindow::onRedo()
 {
-    qDebug() << "Redo";
+    if (doc->canRedo())
+        doc->redo();
+    else
+        ui->actionRedo->setEnabled(false);
 }
 
 void MainWindow::onDelete()

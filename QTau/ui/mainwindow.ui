@@ -112,6 +112,9 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_save.png</normaloff>:/images/b_save.png</iconset>
@@ -136,6 +139,9 @@
    </property>
   </action>
   <action name="actionPlay">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_play.png</normaloff>:/images/b_play.png</iconset>
@@ -148,6 +154,9 @@
    </property>
   </action>
   <action name="actionStop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_stop.png</normaloff>:/images/b_stop.png</iconset>
@@ -172,6 +181,9 @@
    </property>
   </action>
   <action name="actionUndo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_undo.png</normaloff>:/images/b_undo.png</iconset>
@@ -184,6 +196,9 @@
    </property>
   </action>
   <action name="actionRedo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_redo.png</normaloff>:/images/b_redo.png</iconset>
@@ -208,6 +223,9 @@
    </property>
   </action>
   <action name="actionBack">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_play_prev.png</normaloff>:/images/b_play_prev.png</iconset>
@@ -220,6 +238,9 @@
    </property>
   </action>
   <action name="actionRepeat">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/qtau.qrc">
      <normaloff>:/images/b_repeat.png</normaloff>:/images/b_repeat.png</iconset>

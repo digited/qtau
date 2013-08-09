@@ -18,7 +18,7 @@ public:
     } EEventLink;
 
     qtauEvent(int type = 0, bool forward = true, EEventLink link = single) :
-        _type(type), _forward(true), _linkType(link) {}
+        _type(type), _forward(forward), _linkType(link) {}
     virtual ~qtauEvent()   {}
 
     int type()            const { return _type;     }
@@ -44,7 +44,12 @@ public:
     explicit qtauEventManager(QObject *parent = 0) : QObject(parent) {}
     virtual ~qtauEventManager() { clearHistory(); }
 
-    virtual void storeEvent(const qtauEvent *e) { clearFuture(); events.push(e->allocCopy()); }
+    virtual void storeEvent(const qtauEvent *e)
+    {
+        clearFuture();
+        events.push(e->allocCopy());
+        stackChanged();
+    }
 
     virtual void undo()
     {
@@ -52,6 +57,7 @@ public:
         {
             futureEvents.push(events.pop());
             futureEvents.top()->_forward = false;
+            stackChanged();
             emit onEvent(futureEvents.top());
         }
     }
@@ -62,11 +68,12 @@ public:
         {
             events.push(futureEvents.pop());
             events.top()->_forward = true;
+            stackChanged();
             emit onEvent(events.top());
         }
     }
 
-    virtual void clearHistory()   { clearPast(); clearFuture();     }
+    virtual void clearHistory()   { clearPast(); clearFuture(); stackChanged(); }
     virtual int  historyDepth()   { return events.size();           }
     virtual bool isHistoryEmpty() { return events.isEmpty();        }
     virtual bool canUndo()        { return !events.isEmpty();       }
@@ -78,6 +85,9 @@ signals:
 protected:
     QStack<qtauEvent*> events;
     QStack<qtauEvent*> futureEvents; // what was undo'ed
+
+    // can be (should be?) overloaded to send undo/redo availability status to UI
+    virtual void stackChanged() {}
 
     void clearPast()
     {

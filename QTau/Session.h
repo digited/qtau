@@ -33,6 +33,8 @@ public:
     bool isSessionEmpty()    { return data.notes.isEmpty(); } /// returns true if doesn't contain any data
     bool isSessionModified() { return isModified; }           /// if has changes from last save/load
 
+    void setModified(bool m) { isModified = m; }
+
 signals:
     void modifiedStatus(bool); /// if document is modified
     void undoStatus    (bool); /// if can undo last stored action
@@ -52,17 +54,13 @@ protected:
     QMap<qint64, ust_note*> noteMap;
     ust data;
 
-    void onNoteAdded  (const qtauEvent_NoteAddition &event);
-    void onNoteDeleted(const qtauEvent_NoteAddition &event);
-    void onNoteResized(const qtauEvent_NoteResize   &event);
-    void onNoteMoved  (const qtauEvent_NoteMove     &event);
-    void onNoteLyrics (const qtauEvent_NoteText     &event);
-    void onNoteEffects(const qtauEvent_NoteEffect   &event);
-
     void applyEvent_NoteAdded  (const qtauEvent_NoteAddition &event);
     void applyEvent_NoteMoved  (const qtauEvent_NoteMove     &event);
+    void applyEvent_NoteResized(const qtauEvent_NoteResize   &event);
     void applyEvent_NoteLyrics (const qtauEvent_NoteText     &event);
     void applyEvent_NoteEffects(const qtauEvent_NoteEffect   &event);
+
+    void stackChanged();
 };
 
 #endif // SESSION_H

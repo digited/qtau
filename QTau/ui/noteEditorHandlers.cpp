@@ -208,27 +208,111 @@ void qtauEdController::mouseReleaseEvent(QMouseEvent *event)
 
 void qtauEdController::onNoteAdd(qtauEvent_NoteAddition *event)
 {
+    unselectAll();
+
     foreach (const qtauEvent_NoteAddition::noteAddData &d, event->getAdded())
     {
-        qne::editorNote n;
-        n.id  = d.id;
-        n.txt = d.lyrics;
-        n.pulseOffset = d.pulseOffset;
-        n.pulseLength = d.pulseLength;
-        n.keyNumber   = d.keyNumber;
+        if (event->isForward())
+        {
+            qne::editorNote n;
+            n.id  = d.id;
+            n.txt = d.lyrics;
+            n.pulseOffset = d.pulseOffset;
+            n.pulseLength = d.pulseLength;
+            n.keyNumber   = d.keyNumber;
 
-        idOffset = qMax(idOffset, d.id);
-        notes->idMap[d.id] = n;
+            idOffset = qMax(idOffset, d.id);
+            notes->idMap[d.id] = n;
+        }
+        else
+        {
+            qne::editorNote &n = notes->idMap[d.id];
+            removeFromGrid(n.r.left(),  n.id);
+            removeFromGrid(n.r.right(), n.id);
+            notes->idMap.remove(n.id);
+        }
     }
 
-    owner->recalcNoteRects();
+    if (event->isForward())
+        owner->recalcNoteRects();
+
     owner->lazyUpdate();
 }
 
-void qtauEdController::onNoteResize(qtauEvent_NoteResize *event) {}
-void qtauEdController::onNoteMove(qtauEvent_NoteMove *event) {}
-void qtauEdController::onNoteText(qtauEvent_NoteText *event) {}
-void qtauEdController::onNoteEffect(qtauEvent_NoteEffect *event) {}
+void qtauEdController::onNoteResize(qtauEvent_NoteResize *event)
+{
+    foreach (const qtauEvent_NoteResize::noteResizeData &d, event->getResized())
+    {
+        qne::editorNote &n = notes->idMap[d.id];
+        removeFromGrid(n.r.left(),  n.id);
+        removeFromGrid(n.r.right(), n.id);
+
+        if (event->isForward())
+        {
+            n.pulseOffset = d.offset;
+            n.pulseLength = d.length;
+        }
+        else
+        {
+            n.pulseOffset = d.prevOffset;
+            n.pulseLength = d.prevLength;
+        }
+
+        addToGrid(n.r.left(),  n.id);
+        addToGrid(n.r.right(), n.id);
+    }
+
+    recalcNoteRects();
+    owner->lazyUpdate();
+}
+
+// TODO: resize and move generally look the same, maybe merge them?
+void qtauEdController::onNoteMove(qtauEvent_NoteMove *event)
+{
+    foreach (const qtauEvent_NoteMove::noteMoveData &d, event->getMoved())
+    {
+        qne::editorNote &n = notes->idMap[d.id];
+        removeFromGrid(n.r.left(),  n.id);
+        removeFromGrid(n.r.right(), n.id);
+
+        if (event->isForward())
+        {
+            n.pulseOffset += d.pulseOffDelta;
+            n.keyNumber   =  d.keyNumber;
+        }
+        else
+        {
+            n.pulseOffset -= d.pulseOffDelta;
+            n.keyNumber   =  d.prevKeyNumber;
+        }
+
+        addToGrid(n.r.left(),  n.id);
+        addToGrid(n.r.right(), n.id);
+    }
+
+    recalcNoteRects();
+    owner->lazyUpdate();
+}
+
+void qtauEdController::onNoteText(qtauEvent_NoteText *event)
+{
+    foreach (const qtauEvent_NoteText::noteTextData &d, event->getText())
+    {
+        qne::editorNote &n = notes->idMap[d.id];
+
+        if (event->isForward()) n.txt = d.txt;
+        else                    n.txt = d.prevTxt;
+
+        n.cached = false;
+    }
+
+    owner->lazyUpdate();
+}
+
+void qtauEdController::onNoteEffect(qtauEvent_NoteEffect *event)
+{
+    //
+}
 
 
 qne::editorNote* qtauEdController::noteInPoint(const QPoint &p)
@@ -302,8 +386,11 @@ void qtauEd_TextInput::onEdited()
         if (txt != editedNote->txt)
         {
             qtauEvent_NoteText::noteTextData d;
+
+            d.id      = editedNote->id;
+            d.txt     = txt;
             d.prevTxt = editedNote->txt;
-            d.txt = txt;
+
             qtauEvent_NoteText::noteTextVector v;
             v.append(d);
             qtauEvent_NoteText *add = new qtauEvent_NoteText(v);
@@ -503,14 +590,20 @@ void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent *event)
     {
         // some movement was applied, so generate move event
         qtauEvent_NoteMove::noteMoveVector v;
+        float pixelsToPulses = 480.0 / setup->note.width();
+        // TODO: as barWidth and octHeight, maybe move it to setup struct and precalc on configure?
+        // TODO: move precalc from editor to mainwindow, where zoom change is processed
+        // TODO: I now must have, like, a billion of todos here. Do them, damnit
+        int totalKeys = (setup->baseOctave + setup->numOctaves - 1) * 12;
 
         foreach (const quint64 &id, notes->selected)
         {
             qne::editorNote &n = notes->idMap[id];
             qtauEvent_NoteMove::noteMoveData d;
             d.id = n.id;
-            d.pulseOffset = n.pulseOffset;
-            d.keyNumber   = n.keyNumber;
+            d.pulseOffDelta = n.pulseOffset - (int)((float)n.dragSt.x() * pixelsToPulses + 0.001);
+            d.keyNumber     = n.keyNumber;
+            d.prevKeyNumber = totalKeys - n.dragSt.y() / setup->note.height();
             v.append(d);
         }
 
@@ -597,15 +690,16 @@ void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent *event)
 {
     state->snapLine = -1;
     owner->setCursor(Qt::ArrowCursor);
+    float pixelsToPulses = 480.0 / setup->note.width();
 
     if (editedNote->r.width() != originalRect.width())
     {
         qtauEvent_NoteResize::noteResizeData d;
         d.id         = editedNote->id;
-        d.offset     = editedNote->r.x();
-        d.length     = editedNote->r.width();
-        d.prevOffset = originalRect.x();
-        d.prevLength = originalRect.width();
+        d.offset     = editedNote->r.x()     * pixelsToPulses + 0.001;
+        d.length     = editedNote->r.width() * pixelsToPulses + 0.001;
+        d.prevOffset = originalRect.x()      * pixelsToPulses + 0.001;
+        d.prevLength = originalRect.width()  * pixelsToPulses + 0.001;
 
         qtauEvent_NoteResize::noteResizeVector v;
         v.append(d);

@@ -139,6 +139,8 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
                 uf.write(activeSession->ustBinary());
                 uf.close();
 
+                activeSession->setModified(false);
+
                 vsLog::s("UST saved to " + fileName);
             }
             else

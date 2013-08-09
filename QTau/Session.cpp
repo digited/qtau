@@ -7,7 +7,7 @@
 
 
 qtauSession::qtauSession(QObject *parent) :
-    qtauEventManager(parent)
+    qtauEventManager(parent), docName(tr("Untitled")), isModified(false)
 {
     data.clear();
 }
@@ -130,6 +130,28 @@ void qtauSession::applyEvent_NoteAdded(const qtauEvent_NoteAddition &event)
 }
 
 
+void qtauSession::applyEvent_NoteResized(const qtauEvent_NoteResize &event)
+{
+    const qtauEvent_NoteResize::noteResizeVector &changeset = event.getResized();
+
+    foreach (const qtauEvent_NoteResize::noteResizeData &change, changeset)
+    {
+        ust_note *n = noteMap[change.id];
+
+        if (event.isForward())
+        {
+            n->pulseOffset = change.offset;
+            n->pulseLength = change.length;
+        }
+        else
+        {
+            n->pulseOffset = change.prevOffset;
+            n->pulseLength = change.prevLength;
+        }
+    }
+}
+
+
 void qtauSession::applyEvent_NoteMoved(const qtauEvent_NoteMove &event)
 {
     const qtauEvent_NoteMove::noteMoveVector &changeset = event.getMoved();
@@ -140,12 +162,12 @@ void qtauSession::applyEvent_NoteMoved(const qtauEvent_NoteMove &event)
 
         if (event.isForward())
         {
-            n->pulseOffset += change.pulseOffset;
+            n->pulseOffset += change.pulseOffDelta;
             n->keyNumber   =  change.keyNumber;
         }
         else
         {
-            n->pulseOffset -= change.pulseOffset;
+            n->pulseOffset -= change.pulseOffDelta;
             n->keyNumber   =  change.prevKeyNumber;
         }
     }
@@ -164,10 +186,10 @@ void qtauSession::applyEvent_NoteLyrics(const qtauEvent_NoteText &event)
 
 void qtauSession::applyEvent_NoteEffects(const qtauEvent_NoteEffect &event)
 {
-    // TODO:
+    // TODO: or not to do, that is the question
 }
 
-//--------- callbacks -----------------------------
+//--------- dispatcher -----------------------------
 void qtauSession::onUIEvent(qtauEvent *e)
 {
     if (e)
@@ -178,8 +200,13 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteAddition *ne = static_cast<qtauEvent_NoteAddition*>(e);
 
-            if (ne) onNoteAdded(*ne);
-            else   vsLog::e("Session could not convert UI event to noteAdd");
+            if (ne)
+            {
+                applyEvent_NoteAdded(*ne);
+                storeEvent(ne);
+            }
+            else
+                vsLog::e("Session could not convert UI event to noteAdd");
 
             break;
         }
@@ -187,8 +214,13 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteMove *ne = static_cast<qtauEvent_NoteMove*>(e);
 
-            if (ne) onNoteMoved(*ne);
-            else   vsLog::e("Session could not convert UI event to noteMove");
+            if (ne)
+            {
+                applyEvent_NoteMoved(*ne);
+                storeEvent(ne);
+            }
+            else
+                vsLog::e("Session could not convert UI event to noteMove");
 
             break;
         }
@@ -196,8 +228,13 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteResize *ne = static_cast<qtauEvent_NoteResize*>(e);
 
-            if (e) onNoteResized(*ne);
-            else   vsLog::e("Session could not convert UI event to noteResize");
+            if (e)
+            {
+                applyEvent_NoteResized(*ne);
+                storeEvent(ne);
+            }
+            else
+                vsLog::e("Session could not convert UI event to noteResize");
 
             break;
         }
@@ -205,8 +242,13 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteText *ne = static_cast<qtauEvent_NoteText*>(e);
 
-            if (ne) onNoteLyrics(*ne);
-            else   vsLog::e("Session could not convert UI event to noteText");
+            if (ne)
+            {
+                applyEvent_NoteLyrics(*ne);
+                storeEvent(ne);
+            }
+            else
+                vsLog::e("Session could not convert UI event to noteText");
 
             break;
         }
@@ -214,194 +256,29 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteEffect *ne = static_cast<qtauEvent_NoteEffect*>(e);
 
-            if (ne) onNoteEffects(*ne);
-            else   vsLog::e("Session could not convert UI event to noteEffect");
+            if (ne)
+            {
+                applyEvent_NoteEffects(*ne);
+                storeEvent(ne);
+            }
+            else
+                vsLog::e("Session could not convert UI event to noteEffect");
 
             break;
         }
         default:
             vsLog::e(QString("Session received unknown event type from UI").arg(e->type()));
         }
+
+        delete e; // NOTE: it is copied on storing here, so someone somewhere should delete it
     }
     else
         vsLog::e("Session receved a null event from UI");
 }
 
-
-void qtauSession::onNoteAdded(const qtauEvent_NoteAddition &event)
+void qtauSession::stackChanged()
 {
-    if (!event.isForward())
-    {
-        vsLog::e("Session got reverse NoteAdded event, skipping");
-        return;
-    }
-
-    const qtauEvent_NoteAddition::noteAddVector &changeset = event.getAdded();
-
-    if (!changeset.isEmpty())
-    {
-        bool valid = true;
-        QVector<ust_note>   changeData;
-        QMap<quint64, bool> newIDs;
-
-        // need to check changeset for sanity, it'll be too late after it has been applied to data
-        foreach (const qtauEvent_NoteAddition::noteAddData &change, changeset)
-        {
-            // TODO: checking id maps may not work with reverse events!
-            valid &= change.pulseOffset >= 0     && change.pulseOffset < 10000000 &&
-                     change.pulseLength  > 0     && change.pulseLength < 100000   &&
-                     change.keyNumber > 0        && change.id > 0                 &&
-                     !noteMap.contains(change.id)&& !change.lyrics.isEmpty();
-
-            if (valid)
-                newIDs[change.id] = true;
-            else
-            {
-                vsLog::e("Session onNoteAdded got invalid changeset data: " + change.toString());
-                break;
-            }
-        }
-
-        if (valid)
-        {
-            applyEvent_NoteAdded(event); // apply to data
-            storeEvent(&event);             // add to stack
-        }
-    }
-    else
-        vsLog::e("Session got empty noteadd changeset, ignoring...");
-}
-
-
-void qtauSession::onNoteDeleted(const qtauEvent_NoteAddition &event)
-{
-    if (event.isForward())
-    {
-        vsLog::e("Session got forward NoteDeleted event, skipping");
-        return;
-    }
-
-    const qtauEvent_NoteAddition::noteAddVector &changeset = event.getAdded();
-
-    if (!changeset.isEmpty())
-    {
-        bool valid = true;
-        QMap<quint64, bool> removedIDs;
-
-        // sanity check
-        foreach (const qtauEvent_NoteAddition::noteAddData &change, changeset)
-        {
-            valid &= (noteMap.contains(change.id) && !removedIDs.contains(change.id));
-
-            if (valid)
-                removedIDs[change.id] = true;
-            else
-            {
-                vsLog::e("Session onNoteDeleted got invalid changeset data: " + change.toString());
-                break;
-            }
-        }
-
-        if (valid)
-        {
-/* there are two ways of storing delete event
-    1. check if event dataset is precisely equal to data - offset/length/lyrics/effects etc
-    2. check only ID, then just drop dataset and fill new one with what's in data for corresponding IDs
-
-    currently using the third way - no checks and hope for the best
-*/
-            applyEvent_NoteAdded(event);
-            storeEvent(&event);
-        }
-    }
-    else
-        vsLog::e("Session got empty notedelete changeset, ignoring...");
-}
-
-void qtauSession::onNoteResized(const qtauEvent_NoteResize &event)
-{
-    // TODO: do it
-}
-
-void qtauSession::onNoteMoved(const qtauEvent_NoteMove &event)
-{
-    if (!event.isForward())
-    {
-        vsLog::e("Session got reverse NoteMoved event, ignoring");
-        return;
-    }
-
-    const qtauEvent_NoteMove::noteMoveVector &changeset = event.getMoved();
-
-    if (!changeset.isEmpty())
-    {
-        bool valid = true;
-        QMap<quint64, bool> movedIDs;
-
-        // sanity check
-        foreach (const qtauEvent_NoteMove::noteMoveData &change, changeset)
-        {
-            valid &= (noteMap.contains(change.id) && !movedIDs.contains(change.id));
-
-            if (valid)
-                movedIDs[change.id] = true;
-            else
-            {
-                vsLog::e("Session onNoteMoved got invalid changeset data: " + change.toString());
-                break;
-            }
-        }
-
-        if (valid)
-        {
-            applyEvent_NoteMoved(event);
-            storeEvent(&event);
-        }
-    }
-    else
-        vsLog::e("Session got empty notemove changeset, ignoring...");
-}
-
-void qtauSession::onNoteLyrics(const qtauEvent_NoteText &event)
-{
-    if (!event.isForward())
-    {
-        vsLog::e("Session got reverse NoteLyrics event, ignoring");
-        return;
-    }
-
-    const qtauEvent_NoteText::noteTextVector &changeset = event.getText();
-
-    if (!changeset.isEmpty())
-    {
-        bool valid = true;
-        QMap<quint64, bool> textIDs;
-
-        // sanity check
-        foreach (const qtauEvent_NoteText::noteTextData &change, changeset)
-        {
-            valid &= (noteMap.contains(change.id) && !textIDs.contains(change.id));
-
-            if (valid)
-                textIDs[change.id] = true;
-            else
-            {
-                vsLog::e("Session onNoteLyrics got invalid changeset data: " + change.toString());
-                break;
-            }
-        }
-
-        if (valid)
-        {
-            applyEvent_NoteLyrics(event);
-            storeEvent(&event);
-        }
-    }
-    else
-        vsLog::e("Session got empty notelyrics changeset, ignoring...");
-}
-
-void qtauSession::onNoteEffects(const qtauEvent_NoteEffect &event)
-{
-    vsLog::d("Session shouldn't receive noteEffect events yet, how did that happen?..");
+    emit undoStatus(canUndo());
+    emit redoStatus(canRedo());
+    emit modifiedStatus(isSessionModified());
 }
