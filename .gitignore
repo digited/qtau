@@ -1,0 +1,6 @@
+*.o
+*~
+*.pro.user
+synth/sms
+synth/sekai
+synth/rocaloid
