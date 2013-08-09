@@ -7,6 +7,9 @@
 #include "QTau/audio/qtmmPlayer.h"
 #include "QTau/Utils.h"
 
+#include <QApplication>
+#include <QPluginLoader>
+
 
 qtauController::qtauController(QObject *parent) :
     QObject(parent), audio(0), activeSession(0)

@@ -41,11 +41,7 @@ signals:
     void dataReloaded();       /// when data is changed completely
 
 public slots:
-    void onNoteAdded  (const qtauEvent_NoteAddition &event);
-    void onNoteDeleted(const qtauEvent_NoteAddition &event);
-    void onNoteMoved  (const qtauEvent_NoteMove     &event);
-    void onNoteLyrics (const qtauEvent_NoteText     &event);
-    void onNoteEffects(const qtauEvent_NoteEffect   &event);
+    void onUIEvent(qtauEvent *);
 
 protected:
     bool parseUSTStrings(QStringList ustStrings);
@@ -55,6 +51,12 @@ protected:
 
     QMap<qint64, ust_note*> noteMap;
     ust data;
+
+    void onNoteAdded  (const qtauEvent_NoteAddition &event);
+    void onNoteDeleted(const qtauEvent_NoteAddition &event);
+    void onNoteMoved  (const qtauEvent_NoteMove     &event);
+    void onNoteLyrics (const qtauEvent_NoteText     &event);
+    void onNoteEffects(const qtauEvent_NoteEffect   &event);
 
     void applyEvent_NoteAdded  (const qtauEvent_NoteAddition &event);
     void applyEvent_NoteMoved  (const qtauEvent_NoteMove     &event);

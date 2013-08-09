@@ -355,7 +355,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(hscr,       SIGNAL(valueChanged(int)),  SLOT(horzScrolled(int)));
 
     connect(noteEditor, SIGNAL(rmbScrolled(QPoint,QPoint)), SLOT(onEditorRMBScrolled(QPoint,QPoint)));
-    connect(noteEditor, SIGNAL(requestsOffset(QPoint)),    SLOT(onEditorRequestOffset(QPoint)));
+    connect(noteEditor, SIGNAL(requestsOffset(QPoint)),     SLOT(onEditorRequestOffset(QPoint)));
 
     connect(zoom,       SIGNAL(valueChanged(int)),  SLOT(onZoomed(int)));
     connect(meter,      SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
@@ -398,6 +398,8 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     // NOTE: bind what uses qtauSession only here (menu/toolbar button states etc)
     doc = &s;
 
+    connect(noteEditor, SIGNAL(editorEvent(qtauEvent*)), doc, SLOT(onUIEvent(qtauEvent*)));
+
     connect(doc, SIGNAL(dataReloaded()),       SLOT(onDocReloaded()));
     connect(doc, SIGNAL(modifiedStatus(bool)), SLOT(onDocStatus(bool)));
     connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onUndoStatus(bool)));
@@ -417,8 +419,8 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     //-----------------------------------------------------------------------
 
     // widget configuration - maybe read app settings here?
-    noteEditor->setRMBScrollEnabled(true);
-    noteEditor->setEditingEnabled(false);
+    noteEditor->setRMBScrollEnabled(!ui->actionEdit_Mode->isEnabled());
+    noteEditor->setEditingEnabled  ( ui->actionEdit_Mode->isEnabled());
 
     return true;
 }

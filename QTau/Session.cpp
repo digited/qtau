@@ -168,6 +168,66 @@ void qtauSession::applyEvent_NoteEffects(const qtauEvent_NoteEffect &event)
 }
 
 //--------- callbacks -----------------------------
+void qtauSession::onUIEvent(qtauEvent *e)
+{
+    if (e)
+    {
+        switch (e->type())
+        {
+        case ENoteEvents::add:
+        {
+            qtauEvent_NoteAddition *e = static_cast<qtauEvent_NoteAddition*>(e);
+
+            if (e) onNoteAdded(*e);
+            else   vsLog::e("Session could not convert UI event to noteAdd");
+
+            break;
+        }
+        case ENoteEvents::move:
+        {
+            qtauEvent_NoteMove *e = static_cast<qtauEvent_NoteMove*>(e);
+
+            if (e) onNoteMoved(*e);
+            else   vsLog::e("Session could not convert UI event to noteMove");
+
+            break;
+        }
+        case ENoteEvents::resize:
+        {
+            qtauEvent_NoteResize *e = static_cast<qtauEvent_NoteResize*>(e);
+
+            if (e) onNoteResized(*e);
+            else   vsLog::e("Session could not convert UI event to noteResize");
+
+            break;
+        }
+        case ENoteEvents::text:
+        {
+            qtauEvent_NoteText *e = static_cast<qtauEvent_NoteText*>(e);
+
+            if (e) onNoteLyrics(*e);
+            else   vsLog::e("Session could not convert UI event to noteText");
+
+            break;
+        }
+        case ENoteEvents::effect:
+        {
+            qtauEvent_NoteEffect *e = static_cast<qtauEvent_NoteEffect*>(e);
+
+            if (e) onNoteEffects(*e);
+            else   vsLog::e("Session could not convert UI event to noteEffect");
+
+            break;
+        }
+        default:
+            vsLog::e(QString("Session received unknown event type from UI").arg(e->type()));
+        }
+    }
+    else
+        vsLog::e("Session receved a null event from UI");
+}
+
+
 void qtauSession::onNoteAdded(const qtauEvent_NoteAddition &event)
 {
     if (!event.isForward())

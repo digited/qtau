@@ -17,7 +17,11 @@ audio_backend_vlc {
 }
 
 audio_backend_qtmm {
-    QT += multimedia
+    windows:QT += multimedia
+
+    !windows:INCLUDEPATH += /usr/include/QtMultimediaKit /usr/include/QtMobility
+    !windows:LIBS += -lQtMultimediaKit
+
     SOURCES += QTau/audio/qtmmPlayer.cpp
     HEADERS += QTau/audio/qtmmPlayer.h
 }

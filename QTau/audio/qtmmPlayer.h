@@ -3,7 +3,13 @@
 
 #include <QObject>
 #include "QTau/audio/File.h"
+
+#if defined(Q_WS_WIN)
 #include <QtMultimedia>
+#else
+#include <QtMultimediaKit/QAudio>
+#include <QtMultimediaKit/QAudioOutput>
+#endif
 
 class qtmmPlayer : public QObject
 {

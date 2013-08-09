@@ -539,7 +539,7 @@ void qtauEd_ResizeNote::reset()
 {
     // reset() should just revert resized note to its original size, since resize event may mess with
     //   undo/redo stack if reset is called because of event
-    pointedNote->r.setRect(originalRect);
+    pointedNote->r = originalRect;
     pointedNote = 0;
     state->snapLine = -1;
     lazyUpdate();

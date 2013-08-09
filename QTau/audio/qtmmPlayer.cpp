@@ -1,5 +1,5 @@
 #include "QTau/audio/qtmmPlayer.h"
-
+#include <QDebug>
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :
     QObject(parent), audioOutput(0)
