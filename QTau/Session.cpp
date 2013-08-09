@@ -176,45 +176,45 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
         case ENoteEvents::add:
         {
-            qtauEvent_NoteAddition *e = static_cast<qtauEvent_NoteAddition*>(e);
+            qtauEvent_NoteAddition *ne = static_cast<qtauEvent_NoteAddition*>(e);
 
-            if (e) onNoteAdded(*e);
+            if (ne) onNoteAdded(*ne);
             else   vsLog::e("Session could not convert UI event to noteAdd");
 
             break;
         }
         case ENoteEvents::move:
         {
-            qtauEvent_NoteMove *e = static_cast<qtauEvent_NoteMove*>(e);
+            qtauEvent_NoteMove *ne = static_cast<qtauEvent_NoteMove*>(e);
 
-            if (e) onNoteMoved(*e);
+            if (ne) onNoteMoved(*ne);
             else   vsLog::e("Session could not convert UI event to noteMove");
 
             break;
         }
         case ENoteEvents::resize:
         {
-            qtauEvent_NoteResize *e = static_cast<qtauEvent_NoteResize*>(e);
+            qtauEvent_NoteResize *ne = static_cast<qtauEvent_NoteResize*>(e);
 
-            if (e) onNoteResized(*e);
+            if (e) onNoteResized(*ne);
             else   vsLog::e("Session could not convert UI event to noteResize");
 
             break;
         }
         case ENoteEvents::text:
         {
-            qtauEvent_NoteText *e = static_cast<qtauEvent_NoteText*>(e);
+            qtauEvent_NoteText *ne = static_cast<qtauEvent_NoteText*>(e);
 
-            if (e) onNoteLyrics(*e);
+            if (ne) onNoteLyrics(*ne);
             else   vsLog::e("Session could not convert UI event to noteText");
 
             break;
         }
         case ENoteEvents::effect:
         {
-            qtauEvent_NoteEffect *e = static_cast<qtauEvent_NoteEffect*>(e);
+            qtauEvent_NoteEffect *ne = static_cast<qtauEvent_NoteEffect*>(e);
 
-            if (e) onNoteEffects(*e);
+            if (ne) onNoteEffects(*ne);
             else   vsLog::e("Session could not convert UI event to noteEffect");
 
             break;
@@ -316,6 +316,11 @@ void qtauSession::onNoteDeleted(const qtauEvent_NoteAddition &event)
     }
     else
         vsLog::e("Session got empty notedelete changeset, ignoring...");
+}
+
+void qtauSession::onNoteResized(const qtauEvent_NoteResize &event)
+{
+    // TODO: do it
 }
 
 void qtauSession::onNoteMoved(const qtauEvent_NoteMove &event)

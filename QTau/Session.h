@@ -54,6 +54,7 @@ protected:
 
     void onNoteAdded  (const qtauEvent_NoteAddition &event);
     void onNoteDeleted(const qtauEvent_NoteAddition &event);
+    void onNoteResized(const qtauEvent_NoteResize   &event);
     void onNoteMoved  (const qtauEvent_NoteMove     &event);
     void onNoteLyrics (const qtauEvent_NoteText     &event);
     void onNoteEffects(const qtauEvent_NoteEffect   &event);
