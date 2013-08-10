@@ -81,7 +81,7 @@ void qtauEdController::mouseDoubleClickEvent(QMouseEvent *event)
         QRect r(pointedNote->r);
         r.setSize(QSize(100, setup->note.height())); // TODO: move constants from noteEditor in some common header
 
-        if (state->viewport.contains(r))
+        if (!state->viewport.contains(r))
             owner->scrollTo(r);
 
         owner->lazyUpdate();
@@ -371,7 +371,14 @@ void qtauEd_TextInput::init()
 
 void qtauEd_TextInput::reset()
 {
-    onEdited();
+    if (editedNote)
+    {
+        editingNote = false;
+        disconnect(edit, SIGNAL(editingFinished()), this, SLOT(onEdited()));
+        edit->setVisible(false);
+
+        changeController(new qtauEdController(this));
+    }
 }
 
 void qtauEd_TextInput::onEdited()
@@ -488,8 +495,8 @@ void qtauEd_SelectRect::mouseMoveEvent(QMouseEvent *event)
 void qtauEd_SelectRect::mouseReleaseEvent(QMouseEvent *event)
 {
     state->selectionRect = QRect(-1,-1,0,0); // disable
-    changeController(new qtauEdController(this));
     lazyUpdate();
+    changeController(new qtauEdController(this));
 }
 
 //========================================================================
@@ -535,6 +542,9 @@ void qtauEd_DragNotes::init()
 
     mainMovedNote = pointedNote;
 
+    selBounds = mainMovedNote->r;
+    selRects.clear(); // just to be sure
+
     if (!mainMovedNote->selected)
     {
         mainMovedNote->selected = true;
@@ -545,6 +555,12 @@ void qtauEd_DragNotes::init()
     {
         qne::editorNote &n = notes->idMap[id];
         n.dragSt = n.r.topLeft();
+        selRects.append(n.r);
+
+        selBounds.setLeft  (qMin(selBounds.left  (), n.r.left  ()));
+        selBounds.setTop   (qMin(selBounds.top   (), n.r.top   ()));
+        selBounds.setRight (qMax(selBounds.right (), n.r.right ()));
+        selBounds.setBottom(qMax(selBounds.bottom(), n.r.bottom()));
     }
 }
 
@@ -561,22 +577,78 @@ void qtauEd_DragNotes::mouseMoveEvent(QMouseEvent *event)
 
     QPoint snappedDelta = desiredPos - mainMovedNote->dragSt;
 
-    foreach (const quint64 &id, notes->selected)
+    // collision detection ---------------------------------------------------
+    QRect workspaceZone(0, 0, setup->barWidth * 128, setup->numOctaves * setup->octHeight);
+    QRect newSelBounds(selBounds);
+    newSelBounds.moveTo(selBounds.topLeft() + snappedDelta);
+
+    bool noCollision = workspaceZone.contains(newSelBounds);
+
+    if (noCollision)
     {
-        qne::editorNote &n = notes->idMap[id];
+        QVector<QRect> newSelRects;
 
-        removeFromGrid(n.r.left(),  n.id);
-        removeFromGrid(n.r.right(), n.id);
+        for (int i = 0; i < selRects.size(); ++i)
+        {
+            QRect r(selRects[i]);
+            r.moveTo(r.topLeft() + snappedDelta);
+            newSelRects.append(r);
+        }
 
-        n.r.moveTo(n.dragSt + snappedDelta);
-        updateModelData(n);
+        int firstBar = newSelBounds.left()  / setup->barWidth;
+        int lastBar  = newSelBounds.right() / setup->barWidth;
 
-        addToGrid(n.r.left(),  n.id);
-        addToGrid(n.r.right(), n.id);
+        if (firstBar < notes->grid.size())
+        {
+            if (lastBar >= notes->grid.size())
+                lastBar = notes->grid.size() - 1;
+
+            for (int i = firstBar; i <= lastBar; ++i)
+            {
+                for (int k = 0; k < notes->grid[i].size(); ++k)
+                {
+                    const qne::editorNote &n = notes->idMap[notes->grid[i][k]];
+
+                    if (!n.selected && n.r.intersects(newSelBounds)) // skip selected and those out of grouprect
+                    {
+                        for (int m = 0; m < newSelRects.size(); ++m)
+                            if (n.r.intersects(newSelRects[m]))
+                            {
+                                noCollision = false;
+                                break;
+                            }
+
+                        if (!noCollision)
+                            break;
+                    }
+                }
+
+                if (!noCollision)
+                    break;
+            }
+        }
     }
+    //------------------------------------------------------------------------
 
-    state->snapLine = desiredPos.x();
-    lazyUpdate();
+    if (noCollision)
+    {
+        foreach (const quint64 &id, notes->selected)
+        {
+            qne::editorNote &n = notes->idMap[id];
+
+            removeFromGrid(n.r.left(),  n.id);
+            removeFromGrid(n.r.right(), n.id);
+
+            n.r.moveTo(n.dragSt + snappedDelta);
+            updateModelData(n);
+
+            addToGrid(n.r.left(),  n.id);
+            addToGrid(n.r.right(), n.id);
+        }
+
+        state->snapLine = desiredPos.x();
+        lazyUpdate();
+    }
 }
 
 void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent *event)

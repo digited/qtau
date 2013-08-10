@@ -203,7 +203,7 @@ void qtauNoteEditor::updateBGCache()
         noteBG.moveTop(pxVOff);
 
         if (octCounter == 1 || octCounter == 3 || octCounter == 5 || octCounter == 8 || octCounter == 10)
-             blacks.addRect(noteBG);
+            blacks.addRect(noteBG);
         //----------------------------
 
         octCounter++;
@@ -288,6 +288,8 @@ QPoint qtauNoteEditor::scrollTo(const QRect &r)
 
 void qtauNoteEditor::paintEvent(QPaintEvent *event)
 {
+    lastUpdate = t.elapsed();
+
     // draw bg
     QRect r(event->rect());
 
@@ -303,6 +305,9 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
     cacheRect.moveTo(cacheRect.x() + cacheHOffset, cacheRect.y() + cacheVOffset);
 
     QPainter p(this);
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    p.setRenderHint(QPainter::Antialiasing, false);
+//    p.fillRect(event->rect(), Qt::transparent);
     p.drawPixmap(r, *bgCache, cacheRect);
 
     // singing notes with phoneme labels -------
@@ -399,9 +404,7 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
         p.drawLine(state.snapLine, vSt, state.snapLine, vSt + state.viewport.height());
     }
 
-    lastUpdate = t.elapsed();
     updateCalled = false;
-
 }
 
 void qtauNoteEditor::resizeEvent(QResizeEvent *event)

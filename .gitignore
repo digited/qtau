@@ -1,6 +1,5 @@
 *.o
 *~
 *.pro.user
-synth/sms
-synth/sekai
+synth/lesynth
 synth/rocaloid

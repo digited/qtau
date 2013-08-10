@@ -190,6 +190,9 @@ protected:
     void reset();
     qne::editorNote *mainMovedNote;
 
+    QVector<QRect> selRects;
+    QRect selBounds;
+
 };
 
 
