@@ -65,7 +65,7 @@ void qtauEdController::deleteSelected()
         notes->selected.clear();
         lazyUpdate();
 
-        qtauEvent_NoteAddition *event = new qtauEvent_NoteAddition(v, false);
+        qtauEvent_NoteAddition *event = new qtauEvent_NoteAddition(v, false, true);
         eventHappened(event);
     }
 }
@@ -214,7 +214,10 @@ void qtauEdController::onNoteAdd(qtauEvent_NoteAddition *event)
 
     foreach (const qtauEvent_NoteAddition::noteAddData &d, event->getAdded())
     {
-        if (event->isForward())
+        bool reallyForward = (event->isForward() && !event->isDeleteEvent()) ||
+                            (!event->isForward() &&  event->isDeleteEvent());
+
+        if (reallyForward)
         {
             qne::editorNote n;
             n.id  = d.id;
@@ -235,8 +238,7 @@ void qtauEdController::onNoteAdd(qtauEvent_NoteAddition *event)
         }
     }
 
-    if (event->isForward())
-        owner->recalcNoteRects();
+    owner->recalcNoteRects();
 
     owner->lazyUpdate();
 }

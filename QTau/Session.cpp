@@ -112,7 +112,11 @@ void qtauSession::applyEvent_NoteAdded(const qtauEvent_NoteAddition &event)
 {
     const qtauEvent_NoteAddition::noteAddVector &changeset = event.getAdded();
 
-    if (event.isForward())
+    // delete event has reversed transformations
+    bool reallyForward = (event.isForward() && !event.isDeleteEvent()) ||
+                        (!event.isForward() &&  event.isDeleteEvent());
+
+    if (reallyForward)
     {
         foreach (const qtauEvent_NoteAddition::noteAddData &change, changeset)
         {

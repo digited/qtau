@@ -37,13 +37,16 @@ public:
 
     typedef QVector<noteAddData> noteAddVector;
 
-    qtauEvent_NoteAddition(const noteAddVector &changeset, bool forward = true) :
-        qtauEvent(ENoteEvents::add, forward), added(changeset) {}
+    qtauEvent_NoteAddition(const noteAddVector &changeset, bool forward = true, bool deleteEvent = false) :
+        qtauEvent(ENoteEvents::add, forward), added(changeset), deleteInstead(deleteEvent) {}
 
     const noteAddVector& getAdded() const { return added; }
 
+    bool isDeleteEvent() const { return deleteInstead; }
+
 protected:
     noteAddVector added;
+    bool deleteInstead; // if it really is a delete event, so its transformation should be reversed
 
     qtauEvent_NoteAddition* allocCopy() const { return new qtauEvent_NoteAddition(*this); }
 

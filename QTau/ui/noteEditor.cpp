@@ -22,7 +22,7 @@ QTime t;
 
 
 qtauNoteEditor::qtauNoteEditor(QWidget *parent) :
-    QWidget(parent), bgCache(0), delayingUpdate(false), updateCalled(false)
+    QWidget(parent), bgCache(0), delayingUpdate(false), updateCalled(false), lastCtrl(0)
 {
     setAttribute(Qt::WA_OpaquePaintEvent);
     setAttribute(Qt::WA_NoSystemBackground);
