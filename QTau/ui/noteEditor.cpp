@@ -46,6 +46,12 @@ qtauNoteEditor::~qtauNoteEditor()
 
     if (bgCache)
         delete bgCache;
+
+    if (lastCtrl)
+        delete lastCtrl;
+
+    if (ctrl)
+        delete ctrl;
 }
 
 void qtauNoteEditor::configure(const noteSetup &newSetup)
@@ -436,9 +442,10 @@ void qtauNoteEditor::changeController(qtauEdController *c)
 {
     if (c)
     {
-        if (ctrl)
-            delete ctrl;
+        if (lastCtrl)
+            delete lastCtrl;
 
+        lastCtrl = ctrl;
         ctrl = c;
     }
 }

@@ -77,6 +77,7 @@ void qtauEdController::mouseDoubleClickEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton && pointedNote && state->editingEnabled)
     {
         notes->selected.append(pointedNote->id);
+        pointedNote->selected = true;
 
         QRect r(pointedNote->r);
         r.setSize(QSize(100, setup->note.height())); // TODO: move constants from noteEditor in some common header
@@ -132,6 +133,7 @@ void qtauEdController::mouseMoveEvent(QMouseEvent *event)
                     if (!pointedNote->selected)
                     {
                         unselectAll();
+                        pointedNote->selected = true;
                         notes->selected.append(pointedNote->id);
                     }
 
@@ -360,6 +362,8 @@ void qtauEd_TextInput::init()
 
         QRect r(pointedNote->r);
         r.moveTo(r.topLeft() - state->viewport.topLeft());
+        r.setRight (r.right()  + 1);
+        r.setBottom(r.bottom() + 1);
 
         edit->setGeometry(r);
         edit->setVisible(true);
@@ -658,7 +662,7 @@ void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent *event)
     QPoint pSt  = mainMovedNote->r.topLeft();
     QPoint pEnd = mainMovedNote->dragSt;
 
-    if (pSt.x() != pEnd.x() && pSt.y() != pEnd.y())
+    if (pSt.x() != pEnd.x() || pSt.y() != pEnd.y())
     {
         // some movement was applied, so generate move event
         qtauEvent_NoteMove::noteMoveVector v;
@@ -671,9 +675,12 @@ void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent *event)
         foreach (const quint64 &id, notes->selected)
         {
             qne::editorNote &n = notes->idMap[id];
+            int pxDelta = n.r.x() - n.dragSt.x();
+            float rounder = (pxDelta < 0) ? -0.001 : 0.001;
+
             qtauEvent_NoteMove::noteMoveData d;
             d.id = n.id;
-            d.pulseOffDelta = n.pulseOffset - (int)((float)n.dragSt.x() * pixelsToPulses + 0.001);
+            d.pulseOffDelta = (float)pxDelta * pixelsToPulses + rounder;
             d.keyNumber     = n.keyNumber;
             d.prevKeyNumber = totalKeys - n.dragSt.y() / setup->note.height();
             v.append(d);
@@ -730,32 +737,72 @@ void qtauEd_ResizeNote::init()
 void qtauEd_ResizeNote::mouseMoveEvent(QMouseEvent *event)
 {
     float pixelsToPulses = 480.0 / (float)setup->note.width(); // TODO: maybe shouldn't calc it every time?
-    state->snapLine = snap(event->pos().x() + state->viewport.x(), minNoteWidth,
-                           (toLeft ? editedNote->r.right() + 1 : editedNote->r.left()));
 
-    removeFromGrid(editedNote->r.left(),  editedNote->id);
-    removeFromGrid(editedNote->r.right(), editedNote->id);
+    QRect newNoteRect(editedNote->r);
+    int cursorHPos = snap(event->pos().x() + state->viewport.x(), minNoteWidth,
+                          (toLeft ? editedNote->r.right() + 1 : editedNote->r.left()));
 
     if (toLeft)
-    {
         // calc new left coord, with magical +1's, because no code can work properly without a bit of magic
-        state->snapLine = qMax(0, qMin(state->snapLine, editedNote->r.right() - minNoteWidth + 1));
-        editedNote->r.setLeft(state->snapLine);
-        editedNote->pulseOffset = editedNote->r.x() * pixelsToPulses + 0.001;
+        newNoteRect.setLeft (qMax(0, qMin(cursorHPos, editedNote->r.right() - minNoteWidth + 1)));
+    else
+        newNoteRect.setRight(qMin(setup->barWidth * 128, // TODO: move that 128 somewhere already!
+                                   qMax(cursorHPos - 1, editedNote->r.left() + minNoteWidth - 1)));
+
+    int barSt  = newNoteRect.left()  / setup->barWidth;
+    int barEnd = newNoteRect.right() / setup->barWidth;
+
+    bool noCollision = true;
+
+    if (barSt < notes->grid.size())
+    {
+        if (barEnd >= notes->grid.size())
+            barEnd = notes->grid.size() - 1;
+
+        int i = barSt;
+
+        while (i <= barEnd && noCollision)
+        {
+            for (int k = 0; k < notes->grid[i].size(); ++k)
+            {
+                qne::editorNote &n = notes->idMap[notes->grid[i][k]];
+
+                if (n.id != editedNote->id && n.r.intersects(newNoteRect))
+                {
+                    noCollision = false;
+                    break;
+                }
+            }
+
+            ++i;
+        }
     }
     else
+        notes->grid.resize(barEnd + 10); // that shouldn't really happen, but whatever
+
+    if (noCollision && (editedNote->r.x() != newNoteRect.x() || editedNote->r.width() != newNoteRect.width()))
     {
-        // calc new right coord
-        state->snapLine = qMin(setup->barWidth * 128, // TODO: move that 128 somewhere already!
-                               qMax(state->snapLine, editedNote->r.left() + minNoteWidth));
-        editedNote->r.setRight(state->snapLine - 1);
+        removeFromGrid(editedNote->r.left(),  editedNote->id);
+        removeFromGrid(editedNote->r.right(), editedNote->id);
+
+        if (toLeft)
+        {
+            state->snapLine = newNoteRect.left();
+            editedNote->r.setLeft(state->snapLine);
+            editedNote->pulseOffset = editedNote->r.x() * pixelsToPulses + 0.001;
+        }
+        else
+        {
+            state->snapLine = newNoteRect.right() + 1;
+            editedNote->r.setRight(newNoteRect.right());
+        }
+
+        addToGrid(editedNote->r.left(),  editedNote->id);
+        addToGrid(editedNote->r.right(), editedNote->id);
+
+        editedNote->pulseLength = editedNote->r.width() * pixelsToPulses + 0.001;
+        lazyUpdate();
     }
-
-    addToGrid(editedNote->r.left(),  editedNote->id);
-    addToGrid(editedNote->r.right(), editedNote->id);
-
-    editedNote->pulseLength = editedNote->r.width() * pixelsToPulses + 0.001;
-    lazyUpdate();
 }
 
 void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent *event)
@@ -846,21 +893,60 @@ void qtauEd_AddNote::createNote()
 
 void qtauEd_AddNote::mouseMoveEvent(QMouseEvent *event)
 {
-    // remove right coord from grid
-    removeFromGrid(editedNote->r.left(),  editedNote->id);
-    removeFromGrid(editedNote->r.right(), editedNote->id);
+    int cursorHPos = snap(event->pos().x() + state->viewport.x(), minOffset, editedNote->r.x());
+    int desiredRight = qMin(setup->barWidth * 128,
+                            qMax(cursorHPos - 1, editedNote->r.left() + minOffset - 1));
 
-    // calc new right coord
-    state->snapLine = snap(event->pos().x() + state->viewport.x(), minOffset, editedNote->r.x());
-    state->snapLine = qMin(setup->barWidth * 128, // TODO: move that 128 somewhere already!
-                           qMax(state->snapLine, editedNote->r.left() + minOffset));
-    editedNote->r.setRight(state->snapLine - 1);
-    updateModelData(*editedNote);
+    QRect newNoteRect(editedNote->r);
+    newNoteRect.setRight(desiredRight);
 
-    addToGrid(editedNote->r.left(),  editedNote->id);
-    addToGrid(editedNote->r.right(), editedNote->id);
+    int barSt  = newNoteRect.left()  / setup->barWidth;
+    int barEnd = newNoteRect.right() / setup->barWidth;
 
-    lazyUpdate();
+    bool noCollision = true;
+
+    if (barSt < notes->grid.size())
+    {
+        if (barEnd >= notes->grid.size())
+            barEnd = notes->grid.size() - 1;
+
+        int i = barSt;
+
+        while (i <= barEnd && noCollision)
+        {
+            for (int k = 0; k < notes->grid[i].size(); ++k)
+            {
+                qne::editorNote &n = notes->idMap[notes->grid[i][k]];
+
+                if (n.id != editedNote->id && n.r.intersects(newNoteRect))
+                {
+                    noCollision = false;
+                    break;
+                }
+            }
+
+            ++i;
+        }
+    }
+    else
+        notes->grid.resize(barEnd + 10); // that shouldn't really happen, but whatever
+
+    if (noCollision && editedNote->r.width() != newNoteRect.width())
+    {
+        // remove right coord from grid
+        removeFromGrid(editedNote->r.left(),  editedNote->id);
+        removeFromGrid(editedNote->r.right(), editedNote->id);
+
+        // calc new right coord
+        state->snapLine = cursorHPos;
+        editedNote->r.setRight(cursorHPos - 1);
+        updateModelData(*editedNote);
+
+        addToGrid(editedNote->r.left(),  editedNote->id);
+        addToGrid(editedNote->r.right(), editedNote->id);
+
+        lazyUpdate();
+    }
 }
 
 void qtauEd_AddNote::mouseReleaseEvent(QMouseEvent *event)

@@ -87,6 +87,7 @@ protected:
     bool updateCalled;
 
     qtauEdController *ctrl;
+    qtauEdController *lastCtrl; // they keep getting input after changing somehow :/
 
     void changeController(qtauEdController *c);
     void rmbScrollHappened(const QPoint &delta, const QPoint &origOff);
