@@ -3,3 +3,4 @@
 *.pro.user
 synth/lesynth
 synth/rocaloid
+synth/bin

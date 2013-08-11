@@ -313,7 +313,7 @@ void qtauEdController::onNoteText(qtauEvent_NoteText *event)
     owner->lazyUpdate();
 }
 
-void qtauEdController::onNoteEffect(qtauEvent_NoteEffect *event)
+void qtauEdController::onNoteEffect(qtauEvent_NoteEffect*)
 {
     //
 }
@@ -498,7 +498,7 @@ void qtauEd_SelectRect::mouseMoveEvent(QMouseEvent *event)
     lazyUpdate();
 }
 
-void qtauEd_SelectRect::mouseReleaseEvent(QMouseEvent *event)
+void qtauEd_SelectRect::mouseReleaseEvent(QMouseEvent*)
 {
     state->selectionRect = QRect(-1,-1,0,0); // disable
     lazyUpdate();
@@ -657,7 +657,7 @@ void qtauEd_DragNotes::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent *event)
+void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent*)
 {
     state->snapLine = -1;
 
@@ -807,7 +807,7 @@ void qtauEd_ResizeNote::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent *event)
+void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent*)
 {
     state->snapLine = -1;
     owner->setCursor(Qt::ArrowCursor);
@@ -951,7 +951,7 @@ void qtauEd_AddNote::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void qtauEd_AddNote::mouseReleaseEvent(QMouseEvent *event)
+void qtauEd_AddNote::mouseReleaseEvent(QMouseEvent*)
 {
     state->snapLine = -1;
 

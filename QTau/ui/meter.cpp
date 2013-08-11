@@ -100,27 +100,27 @@ void qtauMeterBar::paintEvent(QPaintEvent *event)
                               screenLabelRects.size(), *labelCache);
 }
 
-void qtauMeterBar::resizeEvent(QResizeEvent *event)
+void qtauMeterBar::resizeEvent(QResizeEvent*)
 {
     updateCache();
 }
 
-void qtauMeterBar::mouseDoubleClickEvent(QMouseEvent *event)
+void qtauMeterBar::mouseDoubleClickEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauMeterBar::mouseMoveEvent(QMouseEvent *event)
+void qtauMeterBar::mouseMoveEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauMeterBar::mousePressEvent(QMouseEvent *event)
+void qtauMeterBar::mousePressEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauMeterBar::mouseReleaseEvent(QMouseEvent *event)
+void qtauMeterBar::mouseReleaseEvent(QMouseEvent*)
 {
     //
 }

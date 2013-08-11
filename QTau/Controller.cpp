@@ -192,12 +192,12 @@ void qtauController::onAppMessage(const QString &msg)
     mw->setWindowState(Qt::WindowActive); // TODO: test
 }
 
-void qtauController::pianoKeyPressed(int octaveNum, int keyNum)
+void qtauController::pianoKeyPressed(int /*octaveNum*/, int /*keyNum*/)
 {
     //qDebug() << "piano key pressed: " << octaveNum << keyNum;
 }
 
-void qtauController::pianoKeyReleased(int octaveNum, int keyNum)
+void qtauController::pianoKeyReleased(int /*octaveNum*/, int /*keyNum*/)
 {
     //qDebug() << "piano key released: " << octaveNum << keyNum;
 }

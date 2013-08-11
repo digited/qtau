@@ -68,27 +68,27 @@ void qtauDynDrawer::paintEvent(QPaintEvent *event)
     p.drawPixmap(screenRect, *bgCache, cacheRect);
 }
 
-void qtauDynDrawer::resizeEvent(QResizeEvent *event)
+void qtauDynDrawer::resizeEvent(QResizeEvent*)
 {
     updateCache();
 }
 
-void qtauDynDrawer::mouseDoubleClickEvent(QMouseEvent *event)
+void qtauDynDrawer::mouseDoubleClickEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauDynDrawer::mouseMoveEvent(QMouseEvent *event)
+void qtauDynDrawer::mouseMoveEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauDynDrawer::mousePressEvent(QMouseEvent *event)
+void qtauDynDrawer::mousePressEvent(QMouseEvent*)
 {
     //
 }
 
-void qtauDynDrawer::mouseReleaseEvent(QMouseEvent *event)
+void qtauDynDrawer::mouseReleaseEvent(QMouseEvent*)
 {
     //
 }

@@ -243,7 +243,7 @@ class qtauFlacData : public IFormatData
 public:
     qtauFlacData() { _ext = "flac"; _mime = "audio/flac"; registerFormat(); }
 
-    bool process(qtauAudio &a)
+    bool process(qtauAudio&)
     {
         return false;
     }
@@ -255,7 +255,7 @@ class qtauOggData : public IFormatData
 public:
     qtauOggData() { _ext = "ogg"; _mime = "audio/ogg"; registerFormat(); }
 
-    bool process(qtauAudio &a)
+    bool process(qtauAudio&)
     {
         return false;
     }

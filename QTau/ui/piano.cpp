@@ -159,7 +159,7 @@ void qtauPiano::mouseDoubleClickEvent(QMouseEvent *event)
         }
 }
 
-void qtauPiano::mouseMoveEvent(QMouseEvent *event)
+void qtauPiano::mouseMoveEvent(QMouseEvent */*event*/)
 {
 //    QPoint pos(event->pos());
 //    pos.setX(pos.x() + offset.width());

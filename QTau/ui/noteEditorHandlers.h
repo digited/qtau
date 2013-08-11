@@ -161,8 +161,8 @@ protected:
     void mouseMoveEvent   (QMouseEvent  *event);
     void mouseReleaseEvent(QMouseEvent  *event);
 
-    void mouseDoubleClickEvent(QMouseEvent  *event) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent  *event) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
 
     void reset();
 
@@ -183,8 +183,8 @@ protected:
     void mouseMoveEvent   (QMouseEvent  *event);
     void mouseReleaseEvent(QMouseEvent  *event);
 
-    void mouseDoubleClickEvent(QMouseEvent  *event) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent  *event) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
 
     void init();
     void reset();
@@ -210,8 +210,8 @@ protected:
     void mouseMoveEvent   (QMouseEvent  *event);
     void mouseReleaseEvent(QMouseEvent  *event);
 
-    void mouseDoubleClickEvent(QMouseEvent  *event) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent  *event) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
 
     void init();
     void reset();
@@ -237,8 +237,8 @@ protected:
     void mouseMoveEvent   (QMouseEvent  *event);
     void mouseReleaseEvent(QMouseEvent  *event);
 
-    void mouseDoubleClickEvent(QMouseEvent  *event) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent  *event) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
 
     void createNote();
     void reset();

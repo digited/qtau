@@ -87,7 +87,7 @@ bool qtauSession::loadUST(QString fileName)
 }
 
 
-QStringList qtauSession::ustStrings(bool selectionOnly) { return ustToStrings(data); }
+QStringList qtauSession::ustStrings(bool /*selectionOnly*/) { return ustToStrings(data); }
 QByteArray  qtauSession::ustBinary()                    { return ustToBytes(data); }
 const ust&  qtauSession::ustRef() const                 { return data; }
 
@@ -188,7 +188,7 @@ void qtauSession::applyEvent_NoteLyrics(const qtauEvent_NoteText &event)
 }
 
 
-void qtauSession::applyEvent_NoteEffects(const qtauEvent_NoteEffect &event)
+void qtauSession::applyEvent_NoteEffects(const qtauEvent_NoteEffect &/*event*/)
 {
     // TODO: or not to do, that is the question
 }

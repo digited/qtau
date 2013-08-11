@@ -75,4 +75,4 @@ FORMS    += QTau/ui/mainwindow.ui
 
 RESOURCES += QTau/res/qtau.qrc
 
-TRANSLATIONS = QTau/res/lauloid_de.ts QTau/res/lauloid_jp.ts
+QMAKE_CXXFLAGS += -Wunused-parameter

@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QLabel *meterLabel = new QLabel(QString("%1/%2") .arg(ns.notesInBar).arg(ns.noteLength), this);
     QLabel *tempoLabel = new QLabel(QString("%1 bpm").arg(ns.tempo),                         this);
 
-    QHBoxLayout *bpmHBL = new QHBoxLayout(this);
+    QHBoxLayout *bpmHBL = new QHBoxLayout();
     bpmHBL->setContentsMargins(0,0,0,0);
     bpmHBL->addSpacing(5);
     bpmHBL->addWidget(meterLabel);
@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //---- notes' dynamics setup area --------------
 
-    QGridLayout *dynBtnL = new QGridLayout(this);
+    QGridLayout *dynBtnL = new QGridLayout();
 
     QString btnNames[CONST_DYN_BUTTONS] = {"VEL", "DYN", "BRE", "BRI", "CLE", "OPE", "GEN", "POR", "PIT", "PBS"};
 
@@ -142,7 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
     dummySB->setOrientation(Qt::Vertical);
     dummySB->setRange(0,0);
 
-    QGridLayout *singParamsL = new QGridLayout(this);
+    QGridLayout *singParamsL = new QGridLayout();
     singParamsL->setContentsMargins(0,0,0,0);
     singParamsL->setSpacing(0);
     singParamsL->addWidget(dynBtnPanel, 0, 0, 1, 1);
@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //---- Combining editor panels into hi-level layout ------
 
-    QGridLayout *gl = new QGridLayout(ui->centralWidget);
+    QGridLayout *gl = new QGridLayout();
     gl->setContentsMargins(0,0,0,0);
     gl->setSpacing(0);
 
@@ -183,7 +183,7 @@ MainWindow::MainWindow(QWidget *parent) :
     spl->setStretchFactor(0, 1);
     spl->setStretchFactor(1, 0);
 
-    QVBoxLayout *edVBL = new QVBoxLayout(this);
+    QVBoxLayout *edVBL = new QVBoxLayout();
     edVBL->setContentsMargins(0,0,0,0);
     edVBL->addWidget(spl);
 
@@ -239,7 +239,7 @@ MainWindow::MainWindow(QWidget *parent) :
         embeddedDocTxt.close();
     }
 
-    QGridLayout *docL = new QGridLayout(this);
+    QGridLayout *docL = new QGridLayout();
     docL->setContentsMargins(0,0,0,0);
     docL->addWidget(docpad, 0, 0, 1, 1);
 
@@ -258,7 +258,7 @@ MainWindow::MainWindow(QWidget *parent) :
     logpad->setContextMenuPolicy(Qt::NoContextMenu);
     logpad->setStyleSheet("p, pre { white-space: 1.2; }");
 
-    QGridLayout *logL = new QGridLayout(this);
+    QGridLayout *logL = new QGridLayout();
     logL->setContentsMargins(0,0,0,0);
     logL->addWidget(logpad, 0, 0, 1, 1);
 
@@ -290,7 +290,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(tabs, SIGNAL(currentChanged(int)), SLOT(onTabSelected(int)));
 
-    QVBoxLayout *vbl = new QVBoxLayout(this);
+    QVBoxLayout *vbl = new QVBoxLayout();
     vbl->setContentsMargins(0,0,0,0);
     vbl->addWidget(tabs);
     ui->centralWidget->setContentsMargins(0,0,0,0);
@@ -421,6 +421,7 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     // widget configuration - maybe read app settings here?
     noteEditor->setRMBScrollEnabled(!ui->actionEdit_Mode->isChecked());
     noteEditor->setEditingEnabled  ( ui->actionEdit_Mode->isChecked());
+    noteEditor->setFocus();
 
     return true;
 }
