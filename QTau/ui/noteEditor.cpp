@@ -56,6 +56,7 @@ qtauNoteEditor::~qtauNoteEditor()
 
 void qtauNoteEditor::configure(const noteSetup &newSetup)
 {
+    ctrl->reset();
     bool gridChanged = newSetup.note != setup.note || newSetup.notesInBar != setup.notesInBar;
     setup = newSetup;
 
@@ -254,6 +255,7 @@ void qtauNoteEditor::setVOffset(int voff)
 {
     if (voff != state.viewport.y())
     {
+        ctrl->reset();
         state.viewport.moveTop(voff);
         lazyUpdate();
     }
@@ -263,6 +265,7 @@ void qtauNoteEditor::setHOffset(int hoff)
 {
     if (hoff != state.viewport.x())
     {
+        ctrl->reset();
         state.viewport.moveLeft(hoff);
         lazyUpdate();
     }
@@ -428,8 +431,6 @@ void qtauNoteEditor::mouseReleaseEvent    (QMouseEvent *event) { ctrl->mouseRele
 
 void qtauNoteEditor::wheelEvent(QWheelEvent *event)
 {
-    ctrl->reset();
-
     if (event->modifiers() & Qt::ShiftModifier)
         emit hscrolled(event->delta());
     else if (event->modifiers() & Qt::ControlModifier)
