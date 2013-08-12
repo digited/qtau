@@ -360,7 +360,7 @@ void qtauEd_TextInput::init()
             edit = new QLineEdit(owner);
 
         connect(edit, SIGNAL(editingFinished()), SLOT(onEdited()));
-        connect(edit, SIGNAL(returnPressed  ()), SLOT(onEdited()));
+        connect(edit, SIGNAL(returnPressed  ()), SLOT(unfocus()));
         editedNote = pointedNote; // may change when clicked outside editbox, so need to store
 
         QRect r(pointedNote->r);
@@ -376,13 +376,19 @@ void qtauEd_TextInput::init()
     }
 }
 
+void qtauEd_TextInput::unfocus()
+{
+    owner->setFocus();
+}
+
 void qtauEd_TextInput::reset()
 {
     if (editedNote)
     {
         editingNote = false;
         disconnect(edit, SIGNAL(editingFinished()), this, SLOT(onEdited()));
-        disconnect(edit, SIGNAL(returnPressed  ()), this, SLOT(onEdited()));
+        disconnect(edit, SIGNAL(returnPressed  ()), this, SLOT(unfocus()));
+        owner->setFocus();
         edit->setVisible(false);
 
         changeController(new qtauEdController(this));

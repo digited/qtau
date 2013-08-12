@@ -143,6 +143,7 @@ protected:
 
 protected slots:
     void onEdited();
+    void unfocus();
 
 };
 
