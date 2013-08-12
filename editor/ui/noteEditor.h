@@ -2,8 +2,8 @@
 #define NOTEEDITOR_H
 
 #include <QWidget>
-#include "QTau/Utils.h"
-#include "QTau/ui/Config.h"
+#include "editor/Utils.h"
+#include "editor/ui/Config.h"
 
 class qtauEvent_NoteAddition;
 class qtauEvent_NoteMove;

@@ -1,9 +1,9 @@
-#include "QTau/ui/piano.h"
+#include "editor/ui/piano.h"
 #include <qevent.h>
 #include <qpainter.h>
 #include <QDebug>
 
-#include "QTau/ui/Config.h"
+#include "editor/ui/Config.h"
 
 
 qtauPiano::qtauPiano(QWidget *parent) :

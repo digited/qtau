@@ -1,7 +1,8 @@
-#include "QTau/Player.h"
+#include "editor/audio/File.h"
 #include <vlc/vlc.h>
 #include <QDebug>
 
+// NOTE: unused currently, thus outdated
 
 qtauPlayer::qtauPlayer(QObject *parent) :
     QObject(parent), _volume(100), _muted(false),

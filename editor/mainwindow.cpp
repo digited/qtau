@@ -5,8 +5,8 @@
 #include <QtCore>
 #include <QIcon>
 
-#include "QTau/Controller.h"
-#include "QTau/Session.h"
+#include "editor/Controller.h"
+#include "editor/Session.h"
 
 #include <QGridLayout>
 #include <QScrollBar>
@@ -18,12 +18,12 @@
 #include <QTextEdit>
 #include <QComboBox>
 
-#include "QTau/ui/piano.h"
-#include "QTau/ui/dynDrawer.h"
-#include "QTau/ui/noteEditor.h"
-#include "QTau/ui/meter.h"
+#include "editor/ui/piano.h"
+#include "editor/ui/dynDrawer.h"
+#include "editor/ui/noteEditor.h"
+#include "editor/ui/meter.h"
 
-#include "QTau/ui/Config.h"
+#include "editor/ui/Config.h"
 
 const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
 

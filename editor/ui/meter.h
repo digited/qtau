@@ -2,7 +2,7 @@
 #define METER_H
 
 #include <QWidget>
-#include "QTau/Utils.h"
+#include "editor/Utils.h"
 
 class QPixmap;
 

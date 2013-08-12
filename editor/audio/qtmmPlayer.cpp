@@ -1,4 +1,4 @@
-#include "QTau/audio/qtmmPlayer.h"
+#include "editor/audio/qtmmPlayer.h"
 #include <QDebug>
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :

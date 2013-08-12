@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QLabel>
 
-#include "QTau/Utils.h"
+#include "editor/Utils.h"
 
 class QPixmap;
 

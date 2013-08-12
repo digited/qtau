@@ -1,5 +1,5 @@
-#include "QTau/ui/dynDrawer.h"
-#include "QTau/ui/Config.h"
+#include "editor/ui/dynDrawer.h"
+#include "editor/ui/Config.h"
 
 #include <QPainter>
 #include <qevent.h>

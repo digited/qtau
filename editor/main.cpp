@@ -1,5 +1,5 @@
 #include "qtsingleapplication/qtsingleapplication.h"
-#include "QTau/Controller.h"
+#include "editor/Controller.h"
 #include <QDebug>
 #include <QIcon>
 

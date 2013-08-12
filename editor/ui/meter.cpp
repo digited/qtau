@@ -1,7 +1,7 @@
-#include "QTau/ui/meter.h"
+#include "editor/ui/meter.h"
 #include <qevent.h>
 #include <qpainter.h>
-#include <QTau/ui/Config.h>
+#include <editor/ui/Config.h>
 
 #include <QTime>
 #include <QPixmap>

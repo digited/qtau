@@ -4,7 +4,7 @@
 #include <QVector>
 #include <QPoint>
 #include <QSize>
-#include "QTau/Events.h"
+#include "editor/Events.h"
 
 
 namespace ENoteEvents

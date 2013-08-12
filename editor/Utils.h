@@ -37,7 +37,8 @@ typedef struct _ns {
     int octHeight;  // derived
 
     _ns() : note(ZOOM_NOTE_WIDTHS[DEFAULT_ZOOM_INDEX], 14), baseOctave(2), numOctaves(7),
-        noteLength(4), notesInBar(4), tempo(120), quantize(32), length(32)
+        noteLength(4), notesInBar(4), tempo(120), quantize(32), length(32),
+        barWidth(note.width()*notesInBar), octHeight(note.height()*12)
     {}
 } noteSetup;
 //----------------------------------------------------

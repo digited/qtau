@@ -1,5 +1,5 @@
-#include "QTau/Session.h"
-#include "QTau/Utils.h"
+#include "editor/Session.h"
+#include "editor/Utils.h"
 
 #include <QFile>
 #include <QTextStream>
@@ -61,10 +61,11 @@ bool qtauSession::loadUST(QString fileName)
             {
                 vsLog::s("Successfully loaded " + fileName);
 
-                clearHistory(); // or make a delete event, settings change event, filepath change event
+                clearHistory(); // or make a delete event + settings change event + filepath change event
                 data = tmp_u;
                 docName = fileName;
                 qtauEvent_NoteAddition *loadNotesChangeset = util_makeAddNotesEvent(data);
+                applyEvent_NoteAdded(*loadNotesChangeset);
 
                 emit dataReloaded();
                 emit onEvent(loadNotesChangeset);
@@ -87,9 +88,35 @@ bool qtauSession::loadUST(QString fileName)
 }
 
 
-QStringList qtauSession::ustStrings(bool /*selectionOnly*/) { return ustToStrings(data); }
-QByteArray  qtauSession::ustBinary()                    { return ustToBytes(data); }
-const ust&  qtauSession::ustRef() const                 { return data; }
+QStringList qtauSession::ustStrings(bool) // TODO: make something better than remaking note vector on every call?
+{
+    data.notes.clear();
+
+    foreach (const quint64 &key, noteMap.keys())
+        data.notes.append(noteMap[key]);
+
+    return ustToStrings(data);
+}
+
+QByteArray  qtauSession::ustBinary()
+{
+    data.notes.clear();
+
+    foreach (const quint64 &key, noteMap.keys())
+        data.notes.append(noteMap[key]);
+
+    return ustToBytes(data);
+}
+
+const ust&  qtauSession::ustRef()
+{
+    data.notes.clear();
+
+    foreach (const quint64 &key, noteMap.keys())
+        data.notes.append(noteMap[key]);
+
+    return data;
+}
 
 void qtauSession::setDocName(const QString &name)
 {
@@ -119,18 +146,11 @@ void qtauSession::applyEvent_NoteAdded(const qtauEvent_NoteAddition &event)
     if (reallyForward)
     {
         foreach (const qtauEvent_NoteAddition::noteAddData &change, changeset)
-        {
-            data.notes.append(ust_note(change.id, change.lyrics,
-                                       change.pulseOffset, change.pulseLength, change.keyNumber));
-            noteMap[change.id] = &data.notes.last();
-        }
+            noteMap[change.id] = ust_note(change.id, change.lyrics, change.pulseOffset, change.pulseLength, change.keyNumber);
     }
     else
         foreach (const qtauEvent_NoteAddition::noteAddData &change, changeset)
-        {
             noteMap.remove(change.id);
-            data.removeID(change.id);
-        }
 }
 
 
@@ -140,17 +160,17 @@ void qtauSession::applyEvent_NoteResized(const qtauEvent_NoteResize &event)
 
     foreach (const qtauEvent_NoteResize::noteResizeData &change, changeset)
     {
-        ust_note *n = noteMap[change.id];
+        ust_note &n = noteMap[change.id];
 
         if (event.isForward())
         {
-            n->pulseOffset = change.offset;
-            n->pulseLength = change.length;
+            n.pulseOffset = change.offset;
+            n.pulseLength = change.length;
         }
         else
         {
-            n->pulseOffset = change.prevOffset;
-            n->pulseLength = change.prevLength;
+            n.pulseOffset = change.prevOffset;
+            n.pulseLength = change.prevLength;
         }
     }
 }
@@ -162,17 +182,17 @@ void qtauSession::applyEvent_NoteMoved(const qtauEvent_NoteMove &event)
 
     foreach (const qtauEvent_NoteMove::noteMoveData &change, changeset)
     {
-        ust_note *n = noteMap[change.id];
+        ust_note &n = noteMap[change.id];
 
         if (event.isForward())
         {
-            n->pulseOffset += change.pulseOffDelta;
-            n->keyNumber   =  change.keyNumber;
+            n.pulseOffset += change.pulseOffDelta;
+            n.keyNumber   =  change.keyNumber;
         }
         else
         {
-            n->pulseOffset -= change.pulseOffDelta;
-            n->keyNumber   =  change.prevKeyNumber;
+            n.pulseOffset -= change.pulseOffDelta;
+            n.keyNumber   =  change.prevKeyNumber;
         }
     }
 }
@@ -183,8 +203,8 @@ void qtauSession::applyEvent_NoteLyrics(const qtauEvent_NoteText &event)
     const qtauEvent_NoteText::noteTextVector &changeset = event.getText();
 
     foreach (const qtauEvent_NoteText::noteTextData &change, changeset)
-        if (event.isForward()) noteMap[change.id]->lyric = change.txt;
-        else                   noteMap[change.id]->lyric = change.prevTxt;
+        if (event.isForward()) noteMap[change.id].lyric = change.txt;
+        else                   noteMap[change.id].lyric = change.prevTxt;
 }
 
 

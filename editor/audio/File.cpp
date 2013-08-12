@@ -1,4 +1,4 @@
-#include "QTau/audio/File.h"
+#include "editor/audio/File.h"
 #include <qfileinfo.h>
 #include <QDebug>
 

@@ -1,6 +1,6 @@
-#include "QTau/ui/noteEditorHandlers.h"
-#include "QTau/ui/noteEditor.h"
-#include "QTau/NoteEvents.h"
+#include "editor/ui/noteEditorHandlers.h"
+#include "editor/ui/noteEditor.h"
+#include "editor/NoteEvents.h"
 
 #include <QLineEdit>
 
@@ -378,8 +378,6 @@ void qtauEd_TextInput::init()
 
 void qtauEd_TextInput::reset()
 {
-    qDebug() << "Editing reset";
-
     if (editedNote)
     {
         editingNote = false;
@@ -393,8 +391,6 @@ void qtauEd_TextInput::reset()
 
 void qtauEd_TextInput::onEdited()
 {
-    qDebug() << "Editing finished";
-
     if (editingNote && editedNote)
     {
         editingNote = false;

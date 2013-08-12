@@ -22,6 +22,17 @@ typedef struct _ust_note
     _ust_note(quint64 i, const QString &txt, int pOff, int pLen, int kNum) :
         id(i), lyric(txt), pulseOffset(pOff), pulseLength(pLen), keyNumber(kNum) {}
 
+    _ust_note(const _ust_note &other)
+    {
+        id          = other.id;
+        lyric       = other.lyric;
+        pulseOffset = other.pulseOffset;
+        pulseLength = other.pulseLength;
+        keyNumber   = other.keyNumber;
+        velocity    = other.velocity;
+        userData    = other.userData;
+    }
+
     void clear()
     {
         id          = 0;

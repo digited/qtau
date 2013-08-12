@@ -1,8 +1,8 @@
 #ifndef NOTEEDITORHANDLERS_H
 #define NOTEEDITORHANDLERS_H
 
-#include "QTau/Utils.h"
-#include "QTau/ui/Config.h"
+#include "editor/Utils.h"
+#include "editor/ui/Config.h"
 #include <qevent.h>
 
 class qtauEvent;
@@ -26,7 +26,7 @@ class qtauEdController : public QObject
 public:
     qtauEdController(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
         owner(&ne), setup(&ns), notes(&nts), state(&st), edit(0), pointedNote(0), absFirstClickPos(-1,-1),
-        rmbDragging(false), idOffset(1) {}
+        rmbDragging(false), idOffset(0) {}
 
     qtauEdController(qtauEdController *c) :
         owner(c->owner), setup(c->setup), notes(c->notes), state(c->state), edit(c->edit),

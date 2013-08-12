@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "QTau/Utils.h"
+#include "editor/Utils.h"
 #include "tools/utauloid/ust.h"
 
 class qtauController;

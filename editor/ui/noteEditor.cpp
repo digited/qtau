@@ -1,6 +1,6 @@
-#include "QTau/ui/noteEditor.h"
-#include "QTau/ui/noteEditorHandlers.h"
-#include "QTau/NoteEvents.h"
+#include "editor/ui/noteEditor.h"
+#include "editor/ui/noteEditorHandlers.h"
+#include "editor/NoteEvents.h"
 
 #include <QTime>
 #include <QTimer>

@@ -1,6 +1,5 @@
 #-------------------------------------------------
-# https://gitorious.org/lauloid/lauloid
-# 2013 Tobias Platen, digited
+# http://github.com/digited/qtau
 #-------------------------------------------------
 
 QT += core gui network
@@ -12,8 +11,8 @@ CONFIG += audio_backend_qtmm
 
 audio_backend_vlc {
     LIBS += -lvlc -lvlccore
-    SOURCES += QTau/audio/vlcPlayer.cpp
-    HEADERS += QTau/audio/vlcPlayer.h
+    SOURCES += editor/audio/vlcPlayer.cpp
+    HEADERS += editor/audio/vlcPlayer.h
 }
 
 audio_backend_qtmm {
@@ -22,57 +21,59 @@ audio_backend_qtmm {
     !windows:INCLUDEPATH += /usr/include/QtMultimediaKit /usr/include/QtMobility
     !windows:LIBS += -lQtMultimediaKit
 
-    SOURCES += QTau/audio/qtmmPlayer.cpp
-    HEADERS += QTau/audio/qtmmPlayer.h
+    SOURCES += editor/audio/qtmmPlayer.cpp
+    HEADERS += editor/audio/qtmmPlayer.h
 }
 
 INCLUDEPATH += tools
 
 windows {
-RC_FILE = QTau/res/qtau_win.rc
+RC_FILE = editor/res/qtau_win.rc
 }
 
-SOURCES += QTau/main.cpp \
-    QTau/mainwindow.cpp \
-    QTau/qtsingleapplication/qtsinglecoreapplication.cpp \
-    QTau/qtsingleapplication/qtsingleapplication.cpp \
-    QTau/qtsingleapplication/qtlockedfile_win.cpp \
-    QTau/qtsingleapplication/qtlockedfile_unix.cpp \
-    QTau/qtsingleapplication/qtlockedfile.cpp \
-    QTau/qtsingleapplication/qtlocalpeer.cpp \
-    QTau/audio/File.cpp \
-    QTau/Session.cpp \
-    QTau/Controller.cpp \
+SOURCES += \
+    editor/main.cpp \
+    editor/mainwindow.cpp \
+    editor/qtsingleapplication/qtsinglecoreapplication.cpp \
+    editor/qtsingleapplication/qtsingleapplication.cpp \
+    editor/qtsingleapplication/qtlockedfile_win.cpp \
+    editor/qtsingleapplication/qtlockedfile_unix.cpp \
+    editor/qtsingleapplication/qtlockedfile.cpp \
+    editor/qtsingleapplication/qtlocalpeer.cpp \
+    editor/audio/File.cpp \
+    editor/Session.cpp \
+    editor/Controller.cpp \
     tools/utauloid/ust.cpp \
-    QTau/ui/piano.cpp \
-    QTau/ui/noteEditor.cpp \
-    QTau/ui/dynDrawer.cpp \
-    QTau/ui/meter.cpp \
-    QTau/Utils.cpp \
-    QTau/ui/noteEditorHandlers.cpp
+    editor/ui/piano.cpp \
+    editor/ui/noteEditor.cpp \
+    editor/ui/dynDrawer.cpp \
+    editor/ui/meter.cpp \
+    editor/Utils.cpp \
+    editor/ui/noteEditorHandlers.cpp
 
-HEADERS  += QTau/mainwindow.h \
-    QTau/qtsingleapplication/qtsinglecoreapplication.h \
-    QTau/qtsingleapplication/qtsingleapplication.h \
-    QTau/qtsingleapplication/qtlockedfile.h \
-    QTau/qtsingleapplication/qtlocalpeer.h \
-    QTau/PluginInterfaces.h \
-    QTau/audio/File.h \
-    QTau/Events.h \
-    QTau/Controller.h \
-    QTau/Session.h \
+HEADERS  += \
+    editor/mainwindow.h \
+    editor/qtsingleapplication/qtsinglecoreapplication.h \
+    editor/qtsingleapplication/qtsingleapplication.h \
+    editor/qtsingleapplication/qtlockedfile.h \
+    editor/qtsingleapplication/qtlocalpeer.h \
+    editor/PluginInterfaces.h \
+    editor/audio/File.h \
+    editor/Events.h \
+    editor/Controller.h \
+    editor/Session.h \
     tools/utauloid/ust.h \
-    QTau/ui/piano.h \
-    QTau/ui/noteEditor.h \
-    QTau/ui/dynDrawer.h \
-    QTau/ui/meter.h \
-    QTau/ui/Config.h \
-    QTau/Utils.h \
-    QTau/NoteEvents.h \
-    QTau/ui/noteEditorHandlers.h
+    editor/ui/piano.h \
+    editor/ui/noteEditor.h \
+    editor/ui/dynDrawer.h \
+    editor/ui/meter.h \
+    editor/ui/Config.h \
+    editor/Utils.h \
+    editor/NoteEvents.h \
+    editor/ui/noteEditorHandlers.h
 
-FORMS    += QTau/ui/mainwindow.ui
+FORMS    += editor/ui/mainwindow.ui
 
-RESOURCES += QTau/res/qtau.qrc
+RESOURCES += editor/res/qtau.qrc
 
 QMAKE_CXXFLAGS += -Wunused-parameter

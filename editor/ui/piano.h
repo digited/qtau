@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QVector>
-#include "QTau/Utils.h"
+#include "editor/Utils.h"
 
 
 class qtauPiano : public QWidget

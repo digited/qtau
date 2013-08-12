@@ -1,11 +1,11 @@
 #include "mainwindow.h"
 
-#include "QTau/Session.h"
-#include "QTau/Controller.h"
-#include "QTau/Events.h"
-#include "QTau/PluginInterfaces.h"
-#include "QTau/audio/qtmmPlayer.h"
-#include "QTau/Utils.h"
+#include "editor/Session.h"
+#include "editor/Controller.h"
+#include "editor/Events.h"
+#include "editor/PluginInterfaces.h"
+#include "editor/audio/qtmmPlayer.h"
+#include "editor/Utils.h"
 
 #include <QApplication>
 #include <QPluginLoader>

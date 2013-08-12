@@ -2,7 +2,7 @@
 #define QTMMPLAYER_H
 
 #include <QObject>
-#include "QTau/audio/File.h"
+#include "editor/audio/File.h"
 
 #if defined(Q_WS_WIN)
 #include <QtMultimedia>

@@ -5,7 +5,7 @@
 #include <QMap>
 
 #include "tools/utauloid/ust.h"
-#include "QTau/NoteEvents.h"
+#include "editor/NoteEvents.h"
 
 
 /** Work session that contains one voice setup (notes/lyrics/effects)
@@ -23,7 +23,7 @@ public:
 
     QStringList ustStrings(bool selectionOnly = false);
     QByteArray  ustBinary();
-    const ust&  ustRef() const;
+    const ust&  ustRef();
 
     QString documentName() { return docName; }
 
@@ -51,8 +51,8 @@ protected:
     QString docName;
     bool    isModified;
 
-    QMap<qint64, ust_note*> noteMap;
-    ust data;
+    QMap<qint64, ust_note> noteMap; // need to store copies until changing data structure to something better
+    ust data; // TODO: nite vector inside is obviously unsuitable, needs changing to something else
 
     void applyEvent_NoteAdded  (const qtauEvent_NoteAddition &event);
     void applyEvent_NoteMoved  (const qtauEvent_NoteMove     &event);
