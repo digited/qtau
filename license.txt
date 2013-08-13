@@ -7,7 +7,7 @@ http://twitter.com/sn0w75
 Icon set "Super Mono Sticker" by Double-J designs
 http://www.doublejdesign.co.uk/2010/07/super-mono-icons/
 
-Qt 4.8 is LGPL obviously.
+Qt is LGPL obviously.
 
 //------------------------------------------------------------------
         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 

@@ -1,7 +1,6 @@
 #ifndef PIANO_H
 #define PIANO_H
 
-#include <QWidget>
 #include <QVector>
 #include "editor/Utils.h"
 

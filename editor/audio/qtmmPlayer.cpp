@@ -38,7 +38,6 @@ bool qtmmPlayer::play(qtauAudio* a)
             af.setByteOrder   (QAudioFormat::LittleEndian);
             af.setChannelCount(a->format->_channel_count);
             af.setCodec       ("audio/pcm");
-            af.setFrequency   (a->format->_sample_rate);
             af.setSampleRate  (a->format->_sample_rate);
             af.setSampleSize  (a->format->_bits_per_sample);
             af.setSampleType  (a->format->_sampleformat_unsigned ?
@@ -100,6 +99,5 @@ void qtmmPlayer::finishedPlaying(QAudio::State state)
     {
         audioOutput->stop();
         delete audioOutput;
-        qDebug() << (int)((void*)audioOutput); // test check if delete sets pointer to 0
     }
 }

@@ -8,15 +8,17 @@
 #include "editor/Controller.h"
 #include "editor/Session.h"
 
-#include <QGridLayout>
-#include <QScrollBar>
-#include <QToolBar>
-#include <QTabWidget>
-#include <QSplitter>
-#include <QGroupBox>
-#include <QScrollArea>
-#include <QTextEdit>
-#include <QComboBox>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QScrollBar>
+#include <QtWidgets/QToolBar>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QSplitter>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QComboBox>
+
+#include <QFileDialog>
 
 #include "editor/ui/piano.h"
 #include "editor/ui/dynDrawer.h"

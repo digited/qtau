@@ -3,7 +3,7 @@ qtau
 
 Free opensource UTAU-like editor for singing synthesizers, uses Qt.
 * License: [WTFPL] [1]
-* Dependencies: Qt 4.8
+* Dependencies: Qt 5
 * OS: any supported by Qt
 
 Linked projects: [lesynth] [2], [lauloid] [3], [Rocaloid] [4]

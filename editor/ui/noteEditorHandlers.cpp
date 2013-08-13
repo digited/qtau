@@ -2,7 +2,11 @@
 #include "editor/ui/noteEditor.h"
 #include "editor/NoteEvents.h"
 
-#include <QLineEdit>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets/QLineEdit>
+#else
+    #include <QLineEdit>
+#endif
 
 const int CONST_NOTE_RESIZE_CURSOR_MARGIN = 6;
 

@@ -7,7 +7,7 @@
 #include <qpainter.h>
 #include <QPainterPath>
 
-#include <QLineEdit>
+#include <QtWidgets/QLineEdit>
 
 const int CONST_CACHE_DEFNUM_LABELS = 1000;
 const int CONST_CACHE_LINE_HEIGHT   = 12;
@@ -323,11 +323,11 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
     int barSt    = firstBar;
     int barEnd   = (hSt + r.width()) / setup.barWidth;
 
-    QPainterPath        noteRects;
-    QPainterPath        selNoteRects;
-    QVector<QRectF>     labelCacheRects;
-    QVector<QRectF>     screenLabelRects;
-    QMap<quint64, bool> processedIDMap;
+    QPainterPath noteRects;
+    QPainterPath selNoteRects;
+
+    QMap<quint64, bool>               processedIDMap;
+    QVector<QPainter::PixmapFragment> cachedLabels;
 
     QPainter cacheP(labelCache);
     cacheP.setBrush(Qt::white); // to clear pixmap completely
@@ -370,9 +370,8 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
                             n.cached = true;
                         }
 
-                        labelCacheRects.append(fR);
-                        fR.moveTo(n.r.x() + 3, n.r.y() + 1);
-                        screenLabelRects.append(fR);
+                        cachedLabels.append(QPainter::PixmapFragment::create(
+                                                QPointF(n.r.x() + 55, n.r.y() + 7), fR)); // wtf is with pos?..
                     }
                 }
 
@@ -389,8 +388,7 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
             p.setPen(QColor(DEFCOLOR_NOTE_SEL));
             p.drawPath(selNoteRects);
 
-            p.drawPixmapFragments(screenLabelRects.data(), labelCacheRects.data(),
-                                  labelCacheRects.size(), *labelCache);
+            p.drawPixmapFragments(cachedLabels.data(), cachedLabels.size(), *labelCache);
         }
     }
 

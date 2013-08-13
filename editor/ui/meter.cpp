@@ -11,8 +11,8 @@ const int CONST_LBLCACHE_LINE_WIDTH  = 20;
 const int CONST_LBLCACHE_CACHED_NUM  = 200;
 const int CONST_LBLCACHE_FONT_HEIGHT = 8;
 
-const int CONST_LBL_HOFFSET = 5; // drawing offset from top-left of octave line
-const int CONST_LBL_VOFFSET = 4;
+const int CONST_LBL_HOFFSET = 15; // drawing offset from top-left of octave line
+const int CONST_LBL_VOFFSET = 10;
 
 const QString CONST_LBLCACHE_FONT_NAME = "Arial";
 
@@ -80,24 +80,17 @@ void qtauMeterBar::paintEvent(QPaintEvent *event)
         firstBar++; // now it's first visible bar line
 
     int lastBar = (hSt + event->rect().width()) / barWidth;
-    QVector<QRectF> screenLabelRects;
-    QVector<QRectF> cacheLabelRects;
+    QVector<QPainter::PixmapFragment> cachedLabels;
 
     int barScreenOffset = firstBar * barWidth - offset;
 
-    for (int i = firstBar; i <= lastBar; ++i)
-    {
-        screenLabelRects.append(QRectF(barScreenOffset + CONST_LBL_HOFFSET, CONST_LBL_VOFFSET,
-                                       CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT));
-        cacheLabelRects.append (QRectF(0, i * CONST_LBLCACHE_LINE_HEIGHT,
-                                       CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT));
+    for (int i = firstBar; i <= lastBar; ++i, barScreenOffset += barWidth)
+        cachedLabels.append(QPainter::PixmapFragment::create(
+            QPointF(barScreenOffset + CONST_LBL_HOFFSET, CONST_LBL_VOFFSET),
+            QRectF(0, i * CONST_LBLCACHE_LINE_HEIGHT, CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT)));
 
-        barScreenOffset += barWidth;
-    }
-
-    if (!screenLabelRects.isEmpty())
-        p.drawPixmapFragments(screenLabelRects.data(), cacheLabelRects.data(),
-                              screenLabelRects.size(), *labelCache);
+    if (!cachedLabels.isEmpty())
+        p.drawPixmapFragments(cachedLabels.data(), cachedLabels.size(), *labelCache);
 }
 
 void qtauMeterBar::resizeEvent(QResizeEvent*)

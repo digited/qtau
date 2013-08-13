@@ -1,10 +1,13 @@
 #ifndef DYNDRAWER_H
 #define DYNDRAWER_H
 
-#include <QWidget>
-#include <QLabel>
-
 #include "editor/Utils.h"
+
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets/QLabel>
+#else
+    #include <QLabel>
+#endif
 
 class QPixmap;
 

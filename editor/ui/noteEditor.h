@@ -1,7 +1,6 @@
 #ifndef NOTEEDITOR_H
 #define NOTEEDITOR_H
 
-#include <QWidget>
 #include "editor/Utils.h"
 #include "editor/ui/Config.h"
 

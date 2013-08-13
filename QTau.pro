@@ -2,7 +2,13 @@
 # http://github.com/digited/qtau
 #-------------------------------------------------
 
-QT += core gui network
+QT += core network
+
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+} else {
+    Qt += gui
+}
 
 TARGET = QTau
 TEMPLATE = app
@@ -16,10 +22,7 @@ audio_backend_vlc {
 }
 
 audio_backend_qtmm {
-    windows:QT += multimedia
-
-    !windows:INCLUDEPATH += /usr/include/QtMultimediaKit /usr/include/QtMobility
-    !windows:LIBS += -lQtMultimediaKit
+    QT += multimedia
 
     SOURCES += editor/audio/qtmmPlayer.cpp
     HEADERS += editor/audio/qtmmPlayer.h
@@ -34,12 +37,6 @@ RC_FILE = editor/res/qtau_win.rc
 SOURCES += \
     editor/main.cpp \
     editor/mainwindow.cpp \
-    editor/qtsingleapplication/qtsinglecoreapplication.cpp \
-    editor/qtsingleapplication/qtsingleapplication.cpp \
-    editor/qtsingleapplication/qtlockedfile_win.cpp \
-    editor/qtsingleapplication/qtlockedfile_unix.cpp \
-    editor/qtsingleapplication/qtlockedfile.cpp \
-    editor/qtsingleapplication/qtlocalpeer.cpp \
     editor/audio/File.cpp \
     editor/Session.cpp \
     editor/Controller.cpp \
@@ -53,10 +50,6 @@ SOURCES += \
 
 HEADERS  += \
     editor/mainwindow.h \
-    editor/qtsingleapplication/qtsinglecoreapplication.h \
-    editor/qtsingleapplication/qtsingleapplication.h \
-    editor/qtsingleapplication/qtlockedfile.h \
-    editor/qtsingleapplication/qtlocalpeer.h \
     editor/PluginInterfaces.h \
     editor/audio/File.h \
     editor/Events.h \
