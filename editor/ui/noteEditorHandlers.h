@@ -51,7 +51,9 @@ protected:
 
     qne::editorNote  *noteInPoint(const QPoint &p);
 
-    virtual void reset() {} // called when event happens - current editing activity should be halted
+    virtual void init()    {}
+    virtual void reset()   {} // called when event happens - current editing activity should be halted
+    virtual void cleanup() {} // called when changing controllers - should check if stopped its activity
 
     inline void addToGrid(int noteCoord, quint64 id)
     {
@@ -137,7 +139,9 @@ public:
 
 protected:
     void reset();
+    void cleanup();
     void init();
+
     bool editingNote;
     qne::editorNote *editedNote;
 
@@ -241,7 +245,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
     void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
 
-    void createNote();
+    void init();
     void reset();
 
     qne::editorNote *editedNote;

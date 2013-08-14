@@ -3,11 +3,7 @@
 
 #include "editor/Utils.h"
 
-#if QT_VERSION >= 0x050000
-    #include <QtWidgets/QLabel>
-#else
-    #include <QLabel>
-#endif
+#include <QtWidgets/QLabel>
 
 class QPixmap;
 

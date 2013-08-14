@@ -2,37 +2,12 @@
 # http://github.com/digited/qtau
 #-------------------------------------------------
 
-QT += core network
-
-greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets
-} else {
-    Qt += gui
-}
+QT += core widgets network multimedia
 
 TARGET = QTau
 TEMPLATE = app
 
-CONFIG += audio_backend_qtmm
-
-audio_backend_vlc {
-    LIBS += -lvlc -lvlccore
-    SOURCES += editor/audio/vlcPlayer.cpp
-    HEADERS += editor/audio/vlcPlayer.h
-}
-
-audio_backend_qtmm {
-    QT += multimedia
-
-    SOURCES += editor/audio/qtmmPlayer.cpp
-    HEADERS += editor/audio/qtmmPlayer.h
-}
-
 INCLUDEPATH += tools
-
-windows {
-RC_FILE = editor/res/qtau_win.rc
-}
 
 SOURCES += \
     editor/main.cpp \
@@ -46,7 +21,8 @@ SOURCES += \
     editor/ui/dynDrawer.cpp \
     editor/ui/meter.cpp \
     editor/Utils.cpp \
-    editor/ui/noteEditorHandlers.cpp
+    editor/ui/noteEditorHandlers.cpp \
+    editor/audio/qtmmPlayer.cpp
 
 HEADERS  += \
     editor/mainwindow.h \
@@ -63,10 +39,13 @@ HEADERS  += \
     editor/ui/Config.h \
     editor/Utils.h \
     editor/NoteEvents.h \
-    editor/ui/noteEditorHandlers.h
+    editor/ui/noteEditorHandlers.h \
+    editor/audio/qtmmPlayer.h
 
-FORMS    += editor/ui/mainwindow.ui
+FORMS += editor/ui/mainwindow.ui
 
 RESOURCES += editor/res/qtau.qrc
+
+windows:RC_FILE = editor/res/qtau_win.rc
 
 QMAKE_CXXFLAGS += -Wunused-parameter

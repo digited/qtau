@@ -2,11 +2,7 @@
 #include "editor/ui/noteEditor.h"
 #include "editor/NoteEvents.h"
 
-#if QT_VERSION >= 0x050000
-    #include <QtWidgets/QLineEdit>
-#else
-    #include <QLineEdit>
-#endif
+#include <QtWidgets/QLineEdit>
 
 const int CONST_NOTE_RESIZE_CURSOR_MARGIN = 6;
 
@@ -348,11 +344,23 @@ qne::editorNote* qtauEdController::noteInPoint(const QPoint &p)
 
 qtauEd_TextInput::qtauEd_TextInput(
     qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
-    qtauEdController(ne, ns, nts, st) { init(); }
+    qtauEdController(ne, ns, nts, st) {}
 
-qtauEd_TextInput::qtauEd_TextInput(qtauEdController *c) : qtauEdController(c) { init(); }
+qtauEd_TextInput::qtauEd_TextInput(qtauEdController *c) : qtauEdController(c) {}
 
 qtauEd_TextInput::~qtauEd_TextInput() {}
+
+void qtauEd_TextInput::cleanup()
+{
+    if (editingNote)
+    {
+        editingNote = false;
+        disconnect(edit, SIGNAL(editingFinished()), this, SLOT(onEdited()));
+        disconnect(edit, SIGNAL(returnPressed  ()), this, SLOT(unfocus()));
+        owner->setFocus();
+        edit->setVisible(false);
+    }
+}
 
 void qtauEd_TextInput::init()
 {
@@ -380,24 +388,8 @@ void qtauEd_TextInput::init()
     }
 }
 
-void qtauEd_TextInput::unfocus()
-{
-    owner->setFocus();
-}
-
-void qtauEd_TextInput::reset()
-{
-    if (editedNote)
-    {
-        editingNote = false;
-        disconnect(edit, SIGNAL(editingFinished()), this, SLOT(onEdited()));
-        disconnect(edit, SIGNAL(returnPressed  ()), this, SLOT(unfocus()));
-        owner->setFocus();
-        edit->setVisible(false);
-
-        changeController(new qtauEdController(this));
-    }
-}
+void qtauEd_TextInput::unfocus() { owner->setFocus(); }
+void qtauEd_TextInput::reset()   { cleanup(); changeController(new qtauEdController(this)); }
 
 void qtauEd_TextInput::onEdited()
 {
@@ -521,9 +513,9 @@ void qtauEd_SelectRect::mouseReleaseEvent(QMouseEvent*)
 
 qtauEd_DragNotes::qtauEd_DragNotes(
         qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
-        qtauEdController(ne, ns, nts, st) { init(); }
+        qtauEdController(ne, ns, nts, st) {}
 
-qtauEd_DragNotes::qtauEd_DragNotes(qtauEdController *c) : qtauEdController(c) { init(); }
+qtauEd_DragNotes::qtauEd_DragNotes(qtauEdController *c) : qtauEdController(c) {}
 
 qtauEd_DragNotes::~qtauEd_DragNotes() {}
 
@@ -712,12 +704,9 @@ void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent*)
 
 qtauEd_ResizeNote::qtauEd_ResizeNote(
         qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st, bool left) :
-    qtauEdController(ne, ns, nts, st), toLeft(left) { init(); }
+    qtauEdController(ne, ns, nts, st), toLeft(left) {}
 
-qtauEd_ResizeNote::qtauEd_ResizeNote(qtauEdController *c, bool left) : qtauEdController(c), toLeft(left)
-{
-    init();
-}
+qtauEd_ResizeNote::qtauEd_ResizeNote(qtauEdController *c, bool left) : qtauEdController(c), toLeft(left) {}
 
 qtauEd_ResizeNote::~qtauEd_ResizeNote() {}
 
@@ -849,9 +838,9 @@ void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent*)
 
 qtauEd_AddNote::qtauEd_AddNote(
         qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
-        qtauEdController(ne, ns, nts, st) { createNote(); }
+        qtauEdController(ne, ns, nts, st) {}
 
-qtauEd_AddNote::qtauEd_AddNote(qtauEdController *c) : qtauEdController(c) { createNote(); }
+qtauEd_AddNote::qtauEd_AddNote(qtauEdController *c) : qtauEdController(c) {}
 
 qtauEd_AddNote::~qtauEd_AddNote() {}
 
@@ -878,7 +867,7 @@ void qtauEd_AddNote::reset()
 }
 
 // won't overload resizenote's init() because using virtual funcs from constructors in C++ is a bad idea
-void qtauEd_AddNote::createNote()
+void qtauEd_AddNote::init()
 {
     minOffset = (setup->note.width() * 4) / setup->quantize;  // using quantizing to place note
 

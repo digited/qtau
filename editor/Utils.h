@@ -7,11 +7,7 @@
 #include <QPoint>
 #include <QSize>
 
-#if QT_VERSION >= 0x050000
-    #include <QtWidgets/QWidget>
-#else
-    #include <QWidget>
-#endif
+#include <QtWidgets/QWidget>
 
 
 const QString QTAU_VERSION = QString::fromUtf8("α1");

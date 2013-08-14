@@ -7,11 +7,7 @@
 #include "editor/audio/qtmmPlayer.h"
 #include "editor/Utils.h"
 
-#if QT_VERSION >= 0x050000
-    #include <QtWidgets/QApplication>
-#else
-    #include <QApplication>
-#endif
+#include <QtWidgets/QApplication>
 
 #include <QPluginLoader>
 

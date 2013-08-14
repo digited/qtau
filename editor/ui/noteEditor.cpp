@@ -444,8 +444,12 @@ void qtauNoteEditor::changeController(qtauEdController *c)
         if (lastCtrl)
             delete lastCtrl;
 
+        if (ctrl)
+            ctrl->cleanup(); // since we're not deleting last one (it's dangerous), need to stop it if it isn't
+
         lastCtrl = ctrl;
         ctrl = c;
+        ctrl->init();
     }
 }
 
