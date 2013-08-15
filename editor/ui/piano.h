@@ -4,6 +4,8 @@
 #include <QVector>
 #include "editor/Utils.h"
 
+class QPixmap;
+
 
 class qtauPiano : public QWidget
 {
@@ -38,7 +40,8 @@ protected:
 
     void initPiano(int baseOctave, int octavesNum);
 
-    QSize  offset; // graphical offset of keys, used for virtual scrolling
+    QPoint   offset; // graphical offset of keys, used for virtual scrolling
+    QPixmap *labelCache;
 
 public:
     //-------------------------------------------------------------
@@ -77,7 +80,7 @@ public:
         {
             c = r;
 
-            int octOff = octN * 12;
+            int octOff = (octN - 1) * 12; // octN starting from 1 minimum, not an index
 
             int whH = r.height() / 7;   // white keys height
             int blH = whH * 0.66;       // black keys height
@@ -88,20 +91,20 @@ public:
             int bw  = ww * 0.66;        // width of black keys
 
             // gen 7 whites
-            keys[11].init(QRect(r.x(), r.y(),               ww, whH), 11, octOff + 11, false);
-            keys[9] .init(QRect(r.x(), r.y() + whH,         ww, whH), 9,  octOff + 9,  false);
-            keys[7] .init(QRect(r.x(), r.y() + whH*2,       ww, whH), 7,  octOff + 7,  false);
-            keys[5] .init(QRect(r.x(), r.y() + whH*3,       ww, whH), 5,  octOff + 5,  false);
-            keys[4] .init(QRect(r.x(), r.y() + whH*4,       ww, whH), 4,  octOff + 4,  false);
-            keys[2] .init(QRect(r.x(), r.y() + whH*5,       ww, whH), 2,  octOff + 2,  false);
-            keys[0] .init(QRect(r.x(), r.y() + whH*6,       ww, whH), 0,  octOff,      false);
+            keys[0] .init(QRect(r.x(), r.y(),                ww, whH), 0,  octOff + 12, false);
+            keys[2] .init(QRect(r.x(), r.y() + whH,          ww, whH), 2,  octOff + 10, false);
+            keys[4] .init(QRect(r.x(), r.y() + whH*2,        ww, whH), 4,  octOff + 8,  false);
+            keys[6] .init(QRect(r.x(), r.y() + whH*3,        ww, whH), 6,  octOff + 6,  false);
+            keys[7] .init(QRect(r.x(), r.y() + whH*4,        ww, whH), 7,  octOff + 5,  false);
+            keys[9] .init(QRect(r.x(), r.y() + whH*5,        ww, whH), 9,  octOff + 3,  false);
+            keys[11].init(QRect(r.x(), r.y() + whH*6,        ww, whH), 11, octOff + 1,  false);
 
             // gen 5 blacks
-            keys[10].init(QRect(r.x(), keys[9].c.y() - bHi, bw, blH), 10, octOff + 10, true);
-            keys[8] .init(QRect(r.x(), keys[7].c.y() - bMd, bw, blH), 8,  octOff + 8,  true);
-            keys[6] .init(QRect(r.x(), keys[5].c.y() - bLw, bw, blH), 6,  octOff + 6,  true);
-            keys[3] .init(QRect(r.x(), keys[2].c.y() - bHi, bw, blH), 3,  octOff + 3,  true);
-            keys[1] .init(QRect(r.x(), keys[0].c.y() - bLw, bw, blH), 1,  octOff + 1,  true);
+            keys[1] .init(QRect(r.x(), keys[2] .c.y() - bHi, bw, blH), 1,  octOff + 11, true);
+            keys[3] .init(QRect(r.x(), keys[4] .c.y() - bMd, bw, blH), 3,  octOff + 9,  true);
+            keys[5] .init(QRect(r.x(), keys[6] .c.y() - bLw, bw, blH), 5,  octOff + 7,  true);
+            keys[8] .init(QRect(r.x(), keys[9] .c.y() - bHi, bw, blH), 8,  octOff + 4,  true);
+            keys[10].init(QRect(r.x(), keys[11].c.y() - bLw, bw, blH), 10, octOff + 2,  true);
         }
 
         int keyIndex (QPoint p) // returns 0..11, -1 if not found
@@ -151,6 +154,7 @@ public:
 protected:
     QVector<octave> octaves;
     key *pressedKey;
+    key *hoveredKey;
     noteSetup ns;
 
 };

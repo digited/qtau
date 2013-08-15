@@ -1,5 +1,6 @@
 #include "editor/audio/qtmmPlayer.h"
-#include <QDebug>
+#include "editor/Utils.h"
+
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :
     QObject(parent), audioOutput(0)
@@ -8,7 +9,7 @@ qtmmPlayer::qtmmPlayer(QObject *parent) :
     QList<QAudioDeviceInfo> advs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
 
     foreach (QAudioDeviceInfo i, advs)
-        qDebug() << i.deviceName() << i.supportedCodecs();
+        vsLog::d(QString("%1 %2").arg(i.deviceName()).arg(i.supportedCodecs().join(' ')));
 }
 
 qtmmPlayer::~qtmmPlayer()

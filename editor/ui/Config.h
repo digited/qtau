@@ -26,6 +26,11 @@ const unsigned int DEFCOLOR_SELRECT_BG        = 0x2200857d;
 
 const unsigned int DEFCOLOR_SNAP_LINE         = 0xaa3effab;
 
+const unsigned int DEFCOLOR_PIANO_LBL_WH      = 0xff000000; // colors for white and black key lablels
+const unsigned int DEFCOLOR_PIANO_LBL_WH_ON   = 0xff00857d;
+const unsigned int DEFCOLOR_PIANO_LBL_BL      = 0xffffffff;
+const unsigned int DEFCOLOR_PIANO_LBL_BL_ON   = 0xffeafffe;
+
 const QString      DEFCOLOR_DYNBTN_OFF        = "#b7b7b7"; // CSS color
 const QString      DEFCOLOR_DYNBTN_BG         = "#77ded8"; // background graph button color
 const QString      DEFCOLOR_DYNBTN_ON         = "#00857d"; // foreground graph button color

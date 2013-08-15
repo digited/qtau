@@ -5,9 +5,11 @@
 
 #include "editor/ui/Config.h"
 
+const int CONST_PIANO_LABELHEIGHT = 14;
+const int CONST_PIANO_LABELWIDTH  = 50;
 
 qtauPiano::qtauPiano(QWidget *parent) :
-    QWidget(parent), offset(0,0), pressedKey(0)
+    QWidget(parent), offset(0,0), labelCache(0), pressedKey(0), hoveredKey(0)
 {
     // setup widget
     setFocusPolicy(Qt::NoFocus);
@@ -15,6 +17,34 @@ qtauPiano::qtauPiano(QWidget *parent) :
 
     initPiano(ns.baseOctave, ns.numOctaves);
 }
+
+//----------------------------------------------------------------
+inline void whiteLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
+{
+    r.moveTopLeft(QPoint(0, vOff));
+    p.setPen(QColor(DEFCOLOR_PIANO_LBL_WH));
+    p.drawText(r, txt);
+
+    r.moveLeft(CONST_PIANO_LABELWIDTH);
+    p.setPen(QColor(DEFCOLOR_PIANO_LBL_WH_ON));
+    p.drawText(r, txt);
+
+    vOff += CONST_PIANO_LABELHEIGHT;
+}
+
+inline void blackLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
+{
+    r.moveTopLeft(QPoint(0, vOff));
+    p.setPen(QColor(DEFCOLOR_PIANO_LBL_BL));
+    p.drawText(r, txt);
+
+    r.moveLeft(CONST_PIANO_LABELWIDTH);
+    p.setPen(QColor(DEFCOLOR_PIANO_LBL_BL_ON));
+    p.drawText(r, txt);
+
+    vOff += CONST_PIANO_LABELHEIGHT;
+}
+//----------------------------------------------------------------
 
 void qtauPiano::initPiano(int baseOctave, int octavesNum)
 {
@@ -31,6 +61,46 @@ void qtauPiano::initPiano(int baseOctave, int octavesNum)
         r.moveTop(i * r.height());
         octaves.append(octave(r, octNum));
     }
+
+    // cache labels
+    if (labelCache)
+        delete labelCache;
+
+    labelCache = new QPixmap(CONST_PIANO_LABELWIDTH * 2 + 10, CONST_PIANO_LABELHEIGHT * ns.numOctaves * 12 + 100);
+    labelCache->fill(Qt::transparent);
+
+    QPainter p(labelCache);
+    QFont f("Arial", 10);
+    p.setFont(f);
+
+    QRect lblR(0,0,CONST_PIANO_LABELWIDTH, CONST_PIANO_LABELHEIGHT);
+    int vOff = 0;
+    int lastOct = ns.baseOctave + ns.numOctaves - 1;
+    int octN = ns.baseOctave;
+
+    do
+    {
+        whiteLbl(p, lblR, QString("C%1") .arg(octN), vOff);
+        blackLbl(p, lblR, QString("C#%1").arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("D%1") .arg(octN), vOff);
+        blackLbl(p, lblR, QString("D#%1").arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("E%1") .arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("F%1") .arg(octN), vOff);
+        blackLbl(p, lblR, QString("F#%1").arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("G%1") .arg(octN), vOff);
+        blackLbl(p, lblR, QString("G#%1").arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("A%1") .arg(octN), vOff);
+        blackLbl(p, lblR, QString("A#%1").arg(octN), vOff);
+
+        whiteLbl(p, lblR, QString("B%1") .arg(octN), vOff);
+
+        ++octN;
+    } while (octN <= lastOct);
 }
 
 qtauPiano::~qtauPiano()
@@ -40,9 +110,9 @@ qtauPiano::~qtauPiano()
 
 void qtauPiano::setOffset(int voff)
 {
-    if (offset.height() != voff)
+    if (offset.y() != voff)
     {
-        offset.setHeight(voff);
+        offset.setY(voff);
         update();
     }
 }
@@ -63,38 +133,53 @@ void qtauPiano::paintEvent(QPaintEvent *event)
     QVector<QRect> whLit;
     QVector<QRect> blLit;
 
-    QRect trR(event->rect()); // translated rect
-    trR.moveTo(trR.x() + offset.width(), trR.y() + offset.height());
+    QVector<QPainter::PixmapFragment> labels;
 
-    QRect drR; // rect with drawing coordinates, translated from virtual keys space to widget area
+    QRect trR(event->rect()); // translated rect
+    trR.moveTo(trR.topLeft() + offset);
+
+    QRect  drR; // rect with drawing coordinates, translated from virtual keys space to widget area
+    QRectF lblR(0, 0, CONST_PIANO_LABELWIDTH, CONST_PIANO_LABELHEIGHT);
+
+    QPoint lblOff(2, -6);
 
     // determine what octave keyblocks are in repaint rect
     foreach (const octave &o, octaves)
+    {
         if (trR.intersects(o.c))  // render whatever keys in octave are visible
-        {
-            // draw whites
             for (int i = 0; i < 12; ++i)
                 if (o.keys[i].c.intersects(trR))
                 {
-                    drR = o.keys[i].c;
-                    drR.moveTo(drR.x() - offset.width(), drR.y() - offset.height());
+                    const key &k = o.keys[i];
+                    drR = k.c;
 
-                    if (o.keys[i].state != Passive)
+                    if (k.state == Pressed)
                     {
-                        if (o.keys[i].isBlack) blLit.append(drR);
+                        if (k.isBlack) blLit.append(drR);
                         else                   whLit.append(drR);
+
+                        lblR.moveTo(CONST_PIANO_LABELWIDTH, (k.number - 1) * CONST_PIANO_LABELHEIGHT);
+                        labels.append(QPainter::PixmapFragment::create(QPointF(drR.bottomRight() + lblOff), lblR));
                     }
                     else
                     {
-                        if (o.keys[i].isBlack) blacks.append(drR);
+                        if (k.isBlack) blacks.append(drR);
                         else                   whites.append(drR);
+
+                        if (k.octIndex == 11 || (hoveredKey && k.number == hoveredKey->number))
+                        {
+                            lblR.moveTo(0, (k.number - 1) * CONST_PIANO_LABELHEIGHT);
+                            labels.append(QPainter::PixmapFragment::create(QPointF(drR.bottomRight() + lblOff), lblR));
+                        }
                     }
                 }
-        }
+    }
 
     if (!(whites.isEmpty() && blacks.isEmpty()))
     {
         QPainter p(this);
+        p.translate(-offset);
+
         QPen pen = p.pen();
         pen.setStyle(Qt::SolidLine);
         pen.setColor(Qt::black);
@@ -126,6 +211,9 @@ void qtauPiano::paintEvent(QPaintEvent *event)
             p.setBrush(Qt::gray);
             p.drawRects(blLit);
         }
+
+        if (!labels.isEmpty())
+            p.drawPixmapFragments(labels.data(), labels.size(), *labelCache);
     }
 }
 
@@ -142,9 +230,7 @@ void qtauPiano::resizeEvent(QResizeEvent * event)
 
 void qtauPiano::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    QPoint pos(event->pos());
-    pos.setX(pos.x() + offset.width());
-    pos.setY(pos.y() + offset.height());
+    QPoint pos(event->pos() + offset);
 
     for (int i = 0; i < octaves.size(); ++i)
         if (octaves[i].c.contains(pos))
@@ -155,33 +241,44 @@ void qtauPiano::mouseDoubleClickEvent(QMouseEvent *event)
             {
                 emit keyPressed (k->number / 12, k->octIndex);
                 emit keyReleased(k->number / 12, k->octIndex);
+                break;
             }
         }
 }
 
-void qtauPiano::mouseMoveEvent(QMouseEvent */*event*/)
+void qtauPiano::mouseMoveEvent(QMouseEvent *event)
 {
-//    QPoint pos(event->pos());
-//    pos.setX(pos.x() + offset.width());
-//    pos.setY(pos.y() + offset.height());
+    key *newHovered = 0;
+    QPoint pos(event->pos() + offset);
 
-//    for (int i = 0; i < octaves.size(); ++i)
-//        if (octaves[i].c.contains(pos))
-//        {
-//            key *k = octaves[i].keyAt(pos);
+    for (int i = 0; i < octaves.size(); ++i)
+        if (octaves[i].c.contains(pos))
+        {
+            newHovered = octaves[i].keyAt(pos);
 
-//            if (k != 0) // found pressed key
-//            {
-//                // TODO: hover animation?
-//            }
-//        }
+            if (newHovered != 0) // found pressed key
+                break;
+        }
+
+    if (hoveredKey && newHovered != hoveredKey) // last key changed
+    {
+        QRect keyR(hoveredKey->c);
+        keyR.moveTo(keyR.topLeft() - offset);
+        update(keyR);
+    }
+
+    if (newHovered)
+    {
+        hoveredKey = newHovered;
+        QRect keyR(hoveredKey->c);
+        keyR.moveTo(keyR.topLeft() - offset);
+        update(keyR);
+    }
 }
 
 void qtauPiano::mousePressEvent(QMouseEvent *event)
 {
-    QPoint pos(event->pos());
-    pos.setX(pos.x() + offset.width());
-    pos.setY(pos.y() + offset.height());
+    QPoint pos(event->pos() + offset);
 
     for (int i = 0; i < octaves.size(); ++i)
         if (octaves[i].c.contains(pos))
@@ -190,15 +287,26 @@ void qtauPiano::mousePressEvent(QMouseEvent *event)
 
             if (k != 0) // found pressed key
             {
+                if (pressedKey != 0)
+                {
+                    pressedKey->state = Passive;
+                    QRect lastR(pressedKey->c);
+                    lastR.moveTo(lastR.topLeft() - offset);
+                    update(lastR);
+
+                    emit keyReleased(pressedKey->number / 12, pressedKey->octIndex);
+                }
+
                 // drawing it pressed
                 k->state = Pressed;
                 QRect keyR(k->c);
-                keyR.moveTo(keyR.x() - offset.width(), keyR.y() - offset.height());
+                keyR.moveTo(keyR.topLeft() - offset);
                 update(keyR);
 
                 pressedKey = k;
 
                 emit keyPressed(k->number / 12, k->octIndex);
+                break;
             }
         }
 }
@@ -214,9 +322,7 @@ void qtauPiano::mouseReleaseEvent(QMouseEvent *event)
     }
     else
     {
-        QPoint pos(event->pos());
-        pos.setX(pos.x() + offset.width());
-        pos.setY(pos.y() + offset.height());
+        QPoint pos(event->pos() + offset);
 
         for (int i = 0; i < octaves.size(); ++i)
             if (octaves[i].c.contains(pos))
@@ -228,7 +334,7 @@ void qtauPiano::mouseReleaseEvent(QMouseEvent *event)
         // unhold, drawing default
         k->state = Passive;
         QRect keyR(k->c);
-        keyR.moveTo(keyR.x() - offset.width(), keyR.y() - offset.height());
+        keyR.moveTo(keyR.topLeft() - offset);
         update(keyR);
 
         emit keyReleased(k->number / 12, k->octIndex);
