@@ -38,6 +38,9 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
+    void onHover(bool inside);
+    bool eventFilter(QObject *object, QEvent *event);
+
     void initPiano(int baseOctave, int octavesNum);
 
     QPoint   offset; // graphical offset of keys, used for virtual scrolling

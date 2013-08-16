@@ -14,35 +14,41 @@ qtauPiano::qtauPiano(QWidget *parent) :
     // setup widget
     setFocusPolicy(Qt::NoFocus);
     setMouseTracking(true);
+    installEventFilter(this);
 
     initPiano(ns.baseOctave, ns.numOctaves);
 }
 
+bool qtauPiano::eventFilter(QObject *object, QEvent *event)
+{
+    if(object==this && (event->type()==QEvent::Enter || event->type()==QEvent::Leave))
+        onHover(event->type()==QEvent::Enter);
+
+    return false;
+}
+
 //----------------------------------------------------------------
-inline void whiteLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
+inline void cacheLbl(QPainter &p, QRect &r, const QString &txt, int &vOff, const QColor &offClr, const QColor &onClr)
 {
     r.moveTopLeft(QPoint(0, vOff));
-    p.setPen(QColor(DEFCOLOR_PIANO_LBL_WH));
+    p.setPen(offClr);
     p.drawText(r, txt);
 
     r.moveLeft(CONST_PIANO_LABELWIDTH);
-    p.setPen(QColor(DEFCOLOR_PIANO_LBL_WH_ON));
+    p.setPen(onClr);
     p.drawText(r, txt);
 
     vOff += CONST_PIANO_LABELHEIGHT;
 }
 
+inline void whiteLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
+{
+    cacheLbl(p, r, txt, vOff, QColor(DEFCOLOR_PIANO_LBL_WH), QColor(DEFCOLOR_PIANO_LBL_WH_ON));
+}
+
 inline void blackLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
 {
-    r.moveTopLeft(QPoint(0, vOff));
-    p.setPen(QColor(DEFCOLOR_PIANO_LBL_BL));
-    p.drawText(r, txt);
-
-    r.moveLeft(CONST_PIANO_LABELWIDTH);
-    p.setPen(QColor(DEFCOLOR_PIANO_LBL_BL_ON));
-    p.drawText(r, txt);
-
-    vOff += CONST_PIANO_LABELHEIGHT;
+    cacheLbl(p, r, txt, vOff, QColor(DEFCOLOR_PIANO_LBL_BL), QColor(DEFCOLOR_PIANO_LBL_BL_ON));
 }
 //----------------------------------------------------------------
 
@@ -344,4 +350,15 @@ void qtauPiano::mouseReleaseEvent(QMouseEvent *event)
 void qtauPiano::wheelEvent(QWheelEvent *event)
 {
     emit scrolled(event->delta());
+}
+
+void qtauPiano::onHover(bool inside)
+{
+    if (!inside && hoveredKey)
+    {
+        QRect keyR(hoveredKey->c);
+        keyR.moveTo(keyR.topLeft() - offset);
+        hoveredKey = 0;
+        update(keyR);
+    }
 }
