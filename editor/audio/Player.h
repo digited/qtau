@@ -1,10 +1,11 @@
-#ifndef QTMMPLAYER_H
-#define QTMMPLAYER_H
+#ifndef QTAU_AUDIO_PLAYER_H
+#define QTAU_AUDIO_PLAYER_H
 
 #include <QObject>
-#include "editor/audio/File.h"
 
-#include <QtMultimedia>
+class QAudioOutput;
+class qtauAudioSource;
+
 
 class qtmmPlayer : public QObject
 {
@@ -14,19 +15,16 @@ public:
     qtmmPlayer(QObject *parent = 0);
     ~qtmmPlayer();
 
-    bool play(qtauAudio *a = 0);
+    bool play(qtauAudioSource &a);
     void pause();
     void stop();
 
 signals:
     void playbackEnded();
 
-protected slots:
-    void finishedPlaying(QAudio::State state);
-
 protected:
     QAudioOutput *audioOutput;
 
 };
 
-#endif // QTMMPLAYER_H
+#endif // QTAU_AUDIO_PLAYER_H

@@ -4,7 +4,7 @@
 #include "editor/Controller.h"
 #include "editor/Events.h"
 #include "editor/PluginInterfaces.h"
-#include "editor/audio/qtmmPlayer.h"
+#include "editor/audio/Player.h"
 #include "editor/Utils.h"
 
 #include <QtWidgets/QApplication>

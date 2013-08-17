@@ -12,7 +12,6 @@ INCLUDEPATH += tools
 SOURCES += \
     editor/main.cpp \
     editor/mainwindow.cpp \
-    editor/audio/File.cpp \
     editor/Session.cpp \
     editor/Controller.cpp \
     tools/utauloid/ust.cpp \
@@ -22,12 +21,16 @@ SOURCES += \
     editor/ui/meter.cpp \
     editor/Utils.cpp \
     editor/ui/noteEditorHandlers.cpp \
-    editor/audio/qtmmPlayer.cpp
+    editor/ui/waveform.cpp \
+    editor/audio/Source.cpp \
+    editor/audio/Player.cpp \
+    editor/audio/Mixer.cpp \
+    editor/audio/Codec.cpp \
+    editor/audio/CodecBase.cpp
 
 HEADERS  += \
     editor/mainwindow.h \
     editor/PluginInterfaces.h \
-    editor/audio/File.h \
     editor/Events.h \
     editor/Controller.h \
     editor/Session.h \
@@ -40,7 +43,6 @@ HEADERS  += \
     editor/Utils.h \
     editor/NoteEvents.h \
     editor/ui/noteEditorHandlers.h \
-    editor/audio/qtmmPlayer.h \
     tools/ffft/OscSinCos.hpp \
     tools/ffft/OscSinCos.h \
     tools/ffft/FFTRealUseTrigo.hpp \
@@ -60,7 +62,13 @@ HEADERS  += \
     tools/ffft/DynArray.h \
     tools/ffft/def.h \
     tools/ffft/Array.hpp \
-    tools/ffft/Array.h
+    tools/ffft/Array.h \
+    editor/ui/waveform.h \
+    editor/audio/Source.h \
+    editor/audio/Player.h \
+    editor/audio/Mixer.h \
+    editor/audio/Codec.h \
+    editor/audio/CodecBase.h
 
 FORMS += editor/ui/mainwindow.ui
 
