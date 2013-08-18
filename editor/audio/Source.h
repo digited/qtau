@@ -12,7 +12,7 @@ class qtauAudioSource : public QIODevice
 
 public:
     explicit qtauAudioSource(QObject *parent = 0);
-    explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f);
+    explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
 
     bool   isSequential()   const { return false;         }
     qint64 pos()            const { return buf.pos();     }

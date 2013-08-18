@@ -36,27 +36,15 @@ bool qtmmPlayer::play(qtauAudioSource *a)
             delete audioOutput;
         }
 
-        if (a->data.size() > 0 && a->format->_data_chunk_length > 0)
+        if (a->size() > 0)
         {
-            QAudioFormat af;
-            af.setByteOrder   (QAudioFormat::LittleEndian);
-            af.setChannelCount(a->format->_channel_count);
-            af.setCodec       ("audio/pcm");
-            af.setSampleRate  (a->format->_sample_rate);
-            af.setSampleSize  (a->format->_bits_per_sample);
-            af.setSampleType  (a->format->_sampleformat_unsigned ?
-                                   QAudioFormat::UnSignedInt : QAudioFormat::SignedInt);
-
-            if (a->format->_data_chunk_location > 0)
-                a->data.buffer().remove(0, a->format->_data_chunk_location); // remove header
-
             QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
 
-            if (info.isFormatSupported(af))
+            if (info.isFormatSupported(a->getAudioFormat()))
             {
-                audioOutput = new QAudioOutput(af, this);
+                audioOutput = new QAudioOutput(a->getAudioFormat(), this);
                 connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(finishedPlaying(QAudio::State)));
-                audioOutput->start(&a->data);
+                audioOutput->start(a);
 
                 result = true;
             }

@@ -6,9 +6,9 @@ qtauAudioSource::qtauAudioSource(QObject *parent) :
 }
 
 qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent) :
-    QIODevice(parent), buf(b), fmt(f)
+    QIODevice(parent), fmt(f)
 {
-    //
+    buf.write(b.data());
 }
 
 // -------------------- generators ----------------------------
