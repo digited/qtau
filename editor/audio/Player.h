@@ -15,9 +15,10 @@ public:
     qtmmPlayer(QObject *parent = 0);
     ~qtmmPlayer();
 
-    bool play(qtauAudioSource &a);
+    bool play(qtauAudioSource *a = 0);
     void pause();
     void stop();
+    void reset() { stop(); play(); }
 
 signals:
     void playbackEnded();

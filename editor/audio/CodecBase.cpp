@@ -26,7 +26,8 @@ qtauAudioSource* qtauWavCodec::cacheAll()
         riff.chunkSize   = read32_le((quint8*)&riff.chunkSize);
 
         if (bytesRead == 12 && riff.chunkSize > 0 &&
-            strcmp(riff.chunkID, "RIFF") == 0 && strcmp(riff.chunkFormat, "WAVE") == 0)
+            memcmp(riff.chunkID,     "RIFF", 4) == 0  &&
+            memcmp(riff.chunkFormat, "WAVE", 4) == 0)
             headerOK = findFormatChunk() && findDataChunk();
         else
             vsLog::e("Wav codec couldn't read RIFF header");
@@ -37,9 +38,11 @@ qtauAudioSource* qtauWavCodec::cacheAll()
     if (headerOK)
     {
         if (!dev->isSequential())
-        {
-            //a.data.buffer().remove(0, _data_chunk_location);
-        }
+            dev->seek(_data_chunk_location); // else it should already be there
+
+        buf.write(dev->readAll());
+
+        result = new qtauAudioSource(buf, fmt, this->parent());
     }
 
     return result;
@@ -49,36 +52,9 @@ qtauAudioSource* qtauWavCodec::cacheAll()
 qtauWavCodec::qtauWavCodec(QIODevice &d, QObject *parent) :
     qtauAudioCodec(d, parent)
 {
-    //
+    if (!d.isOpen())
+        vsLog::e("Wav codec got a closed io device!");
 }
-
-
-/// Storage formats for sample data.
-enum SampleFormat {
-    SF_U8,  /// unsigned 8-bit integer [0,255]
-    SF_S16  /// signed 16-bit integer in host endianness [-32768,32767]
-};
-
-inline int GetSampleSize(SampleFormat format)
-{
-    switch (format)
-    {
-    case SF_U8:  return 1;
-    case SF_S16: return 2;
-    default:     return 0;
-    }
-}
-
-SampleFormat _sample_format;
-int     _frames_left_in_chunk;
-
-int _channel_count;
-int _sample_rate;
-int _bits_per_sample;
-bool _sampleformat_unsigned;
-
-quint64 _data_chunk_location;  // bytes
-int     _data_chunk_length;    // in frames
 
 
 bool qtauWavCodec::findFormatChunk()
@@ -201,12 +177,10 @@ bool qtauWavCodec::findDataChunk()
         {
             if (memcmp(chunk, "data", 4) == 0) // found data chunk
             {
-                // calculate the frame size so we can truncate the data chunk
-                int frame_size = _channel_count * GetSampleSize(_sample_format);
+                int frame_size = fmt.channelCount() * fmt.sampleSize();
 
                 _data_chunk_location  = dev->pos();
                 _data_chunk_length    = chunk_length / frame_size;
-                _frames_left_in_chunk = _data_chunk_length;
 
                 result = true;
                 break;

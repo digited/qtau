@@ -18,6 +18,9 @@ protected:
     bool findFormatChunk();
     bool findDataChunk();
 
+    quint64 _data_chunk_location;  // bytes
+    int     _data_chunk_length;    // in frames
+
 };
 
 class qtauWavCodecFactory : public qtauAudioCodecFactory
