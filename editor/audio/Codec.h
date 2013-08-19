@@ -10,12 +10,8 @@ class qtauAudioCodec : public qtauAudioSource
     Q_OBJECT
     friend class qtauAudioCodecFactory;
 
-public:
-    bool isSequential() const { return dev->isSequential(); }
-
 protected:
     QIODevice *dev;
-
     qtauAudioCodec(QIODevice &d, QObject *parent = 0);
 
 };

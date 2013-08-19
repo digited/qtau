@@ -5,48 +5,23 @@
 #include <QBuffer>
 #include <QAudioBuffer>
 
-class qtmmPlayer;
 
-/// basic audio source is a wrapper for QBuffer, because QAudioBuffer is too limited
-class qtauAudioSource : public QIODevice
+class qtauAudioSource : public QBuffer
 {
     Q_OBJECT
-    friend class qtmmPlayer;
 
 public:
     explicit qtauAudioSource(QObject *parent = 0);
     explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
 
-    bool open(QIODevice::OpenMode mode) { return buf.open(mode); }
-
-    bool isOpen() const { return buf.isOpen(); }
-    void close()        { return buf.close();  }
-
-    bool   isSequential()   const { return false;         }
-    qint64 pos()            const { return buf.pos();     }
-    qint64 size()           const { return buf.size();    }
-    bool   seek(qint64 pos)       { return buf.seek(pos); }
-    bool   atEnd()          const { return buf.atEnd();   }
-    bool   reset()                { return buf.reset();   }
-
-    qint64 bytesAvailable() const { return buf.bytesAvailable(); }
-    qint64 bytesToWrite()   const { return buf.bytesToWrite();   }
-
-    QAudioBuffer getAudioBuffer() { return QAudioBuffer(buf.buffer(), fmt); }
+    QAudioBuffer getAudioBuffer() { return QAudioBuffer(this->buffer(), fmt); }
     QAudioFormat getAudioFormat() { return fmt; }
 
     // should read all contents of file/socket and decode it to PCM in buf
-    virtual qtauAudioSource* cacheAll() { return new qtauAudioSource(buf, fmt); }
-
-public slots:
-    //
+    virtual bool cacheAll() { return true; }
 
 protected:
-    QBuffer      buf; // raw PCM data
     QAudioFormat fmt; // format of that raw PCM data
-
-    qint64 readData (char       *data, qint64 maxSize) { return buf.read (data, maxSize); }
-    qint64 writeData(const char *data, qint64 maxSize) { return buf.write(data, maxSize); }
 
 };
 

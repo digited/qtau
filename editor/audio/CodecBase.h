@@ -13,7 +13,7 @@ class qtauWavCodec : public qtauAudioCodec
     friend class qtauWavCodecFactory;
 
 public:
-    qtauAudioSource* cacheAll();
+    bool cacheAll();
 
 protected:
     qtauWavCodec(QIODevice &d, QObject *parent = 0);
@@ -41,7 +41,7 @@ class qtauFlacCodec : public qtauAudioCodec
     friend class qtauFlacCodecFactory;
 
 public:
-    qtauAudioSource* cacheAll();
+    bool cacheAll();
 
 protected:
     qtauFlacCodec(QIODevice &d, QObject *parent = 0);
@@ -63,7 +63,7 @@ class qtauOggCodec : public qtauAudioCodec
     friend class qtauOggCodecFactory;
 
 public:
-    qtauAudioSource* cacheAll();
+    bool cacheAll();
 
 protected:
     qtauOggCodec(QIODevice &d, QObject *parent = 0);

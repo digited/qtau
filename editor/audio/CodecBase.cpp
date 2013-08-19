@@ -9,11 +9,10 @@ typedef struct {
 } riffHeader;
 
 
-qtauAudioSource* qtauWavCodec::cacheAll()
+bool qtauWavCodec::cacheAll()
 {
     // read all contents of iodevice into buffer, make format from riff header and cut it from pcm data
-    qtauAudioSource *result = 0;
-    bool headerOK = false;
+    bool result = false;
 
     if (dev->bytesAvailable() > 0)
     {
@@ -28,25 +27,24 @@ qtauAudioSource* qtauWavCodec::cacheAll()
         if (bytesRead == 12 && riff.chunkSize > 0 &&
             memcmp(riff.chunkID,     "RIFF", 4) == 0  &&
             memcmp(riff.chunkFormat, "WAVE", 4) == 0)
-            headerOK = findFormatChunk() && findDataChunk();
+            result = findFormatChunk() && findDataChunk();
         else
             vsLog::e("Wav codec couldn't read RIFF header");
     }
     else
         vsLog::e("Audio Wav: empty data");
 
-    if (headerOK)
+    if (result)
     {
         if (!dev->isSequential())
             dev->seek(_data_chunk_location); // else it should already be there
 
-        fmt.setCodec("audio/pcm"); // it's raw data now
+        fmt.setCodec("audio/pcm");
+        fmt.setByteOrder(QAudioFormat::LittleEndian);
 
-        buf.open(QIODevice::WriteOnly);
-        buf.write(dev->readAll());
-        buf.close();
-
-        result = new qtauAudioSource(buf, fmt, this->parent());
+        open(QIODevice::WriteOnly);
+        write(dev->readAll());
+        close();
     }
 
     return result;
@@ -206,5 +204,6 @@ bool qtauWavCodec::findDataChunk()
     return result;
 }
 
-qtauAudioSource* qtauFlacCodec::cacheAll() { return 0; }
-qtauAudioSource* qtauOggCodec::cacheAll() { return 0; }
+
+bool qtauFlacCodec::cacheAll() { return false; }
+bool qtauOggCodec::cacheAll()  { return false; }

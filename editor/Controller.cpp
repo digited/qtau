@@ -190,10 +190,13 @@ void qtauController::onLoadAudio(QString fileName)
             if (f.open(QFile::ReadOnly))
             {
                 qtauAudioCodec  *ac = codecForExt(fi.suffix(), f, this);
-                qtauAudioSource *as = ac->cacheAll();
-                f.close();
 
-                player->play(as);
+                if (ac->cacheAll())
+                    player->play(ac);
+                else
+                    vsLog::e("Error caching audio");
+
+                f.close();
             }
             else
                 vsLog::e("Could not open file " + fileName);

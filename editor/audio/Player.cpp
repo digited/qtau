@@ -4,8 +4,6 @@
 
 #include <QAudioOutput>
 
-#include "QFile"
-
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :
     QObject(parent), audioOutput(0)
@@ -44,21 +42,30 @@ bool qtmmPlayer::play(qtauAudioSource *a)
 
             if (info.isFormatSupported(a->getAudioFormat()))
             {
-                audioOutput = new QAudioOutput(a->getAudioFormat(), this);
+                QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
+                audioOutput = new QAudioOutput(di, a->getAudioFormat(), this);
 
                 connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
                 connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
 
-                audioOutput->setVolume(0.5);
-                audioOutput->start(a);
+                bool opened = a->isOpen();
 
-                result = true;
+                if (!opened)
+                    opened = a->open(QIODevice::ReadOnly);
+
+                if (opened)
+                {
+                    audioOutput->start(a); // audioOutput::start requires a device, opened for reading
+                    result = true;
+                }
+                else
+                    vsLog::e("Could not open audio source device at all. How is this even possible?");
             }
             else
-                qDebug() << "audio format not supported by backend, cannot play audio.";
+                vsLog::e("audio format not supported by backend, cannot play audio.");
         }
         else
-            qDebug() << "no audio data to play";
+            vsLog::e("no audio data to play");
     }
     else
         if (audioOutput)
@@ -95,16 +102,16 @@ void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
     switch (st)
     {
     case QAudio::ActiveState:
-        qDebug() << "active";
+        //qDebug() << "playing~";
         break;
     case QAudio::SuspendedState:
-        qDebug() << "suspended";
+        //qDebug() << "suspended...";
         break;
     case QAudio::StoppedState:
-        qDebug() << "stopped";
+        //qDebug() << "stopped.";
         break;
     case QAudio::IdleState:
-        qDebug() << "idle";
+        //qDebug() << "idle";
         break;
     default:
         vsLog::e(QString("Unknown Qtmm Audio state: %1").arg(st));
@@ -114,5 +121,5 @@ void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
 
 void qtmmPlayer::onTick()
 {
-    qDebug() << audioOutput->processedUSecs();
+    //
 }
