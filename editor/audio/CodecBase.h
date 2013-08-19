@@ -1,6 +1,9 @@
 #ifndef QTAU_AUDIO_CODECBASE_H
 #define QTAU_AUDIO_CODECBASE_H
 
+// basic codecs for QTau - wav, flac and ogg
+// mp3, aac/m4a and true audio should be added via plugins
+
 #include "editor/audio/Codec.h"
 
 

@@ -34,7 +34,12 @@ public slots:
     void onLoadUST(QString fileName);
     void onSaveUST(QString fileName, bool rewrite);
 
-    void synthesize(); // use loaded/created ust to synthesize some vocals
+    void onLoadAudio(QString fileName);
+
+    void playAudio();
+    void stopAudio();
+    void backAudio();
+    void repeatAudio();
 
     void pianoKeyPressed(int,int);
     void pianoKeyReleased(int,int);

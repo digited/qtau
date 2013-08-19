@@ -5,14 +5,22 @@
 #include <QBuffer>
 #include <QAudioBuffer>
 
+class qtmmPlayer;
+
 /// basic audio source is a wrapper for QBuffer, because QAudioBuffer is too limited
 class qtauAudioSource : public QIODevice
 {
     Q_OBJECT
+    friend class qtmmPlayer;
 
 public:
     explicit qtauAudioSource(QObject *parent = 0);
     explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
+
+    bool open(QIODevice::OpenMode mode) { return buf.open(mode); }
+
+    bool isOpen() const { return buf.isOpen(); }
+    void close()        { return buf.close();  }
 
     bool   isSequential()   const { return false;         }
     qint64 pos()            const { return buf.pos();     }

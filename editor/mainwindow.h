@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QtWidgets/QMainWindow>
+#include <QUrl>
 
 #include "editor/Utils.h"
 #include "tools/utauloid/ust.h"
@@ -51,10 +52,14 @@ signals:
     void loadUST(QString fileName);
     void saveUST(QString fileName, bool rewrite);
 
+    void loadAudio(QString fileName);
+
 public slots:
     void onLog(const QString&, int);
     void onOpenUST();
     void onSaveUST();
+
+    void onEditorUrisDropped(QList<QUrl> uris);
 
     void notesVScrolled(int);
     void notesHScrolled(int);

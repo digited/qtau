@@ -1,4 +1,5 @@
 #include "Source.h"
+#include <QDebug>
 
 qtauAudioSource::qtauAudioSource(QObject *parent) :
     QIODevice(parent)
@@ -8,7 +9,12 @@ qtauAudioSource::qtauAudioSource(QObject *parent) :
 qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent) :
     QIODevice(parent), fmt(f)
 {
-    buf.write(b.data());
+    if (b.size() > 0)
+    {
+        buf.open(QIODevice::WriteOnly);
+        buf.write(b.data());
+        buf.close();
+    }
 }
 
 // -------------------- generators ----------------------------

@@ -43,6 +43,9 @@ public:
 
     static qtauCodecRegistry* instance();
 
+    inline bool hasCodecForMime(const QString &mime) const { return (mime.isEmpty()) ? false : codecsByMime.contains(mime); }
+    inline bool hasCodecForExt (const QString &ext)  const { return (ext.isEmpty())  ? false : codecsByExt .contains(ext);  }
+
     // returns new codec if factory is registered for this mime/ext, else returns 0
     qtauAudioCodec* getCodecByMime(const QString &mime, QIODevice &d, QObject *parent = 0);
     qtauAudioCodec* getCodecByExt (const QString &ext,  QIODevice &d, QObject *parent = 0);
@@ -58,6 +61,16 @@ protected:
 
 };
 
+
+inline bool isAudioMimeSupported(const QString &mime)
+{
+    return qtauCodecRegistry::instance()->hasCodecForMime(mime);
+}
+
+inline bool isAudioExtSupported(const QString &ext)
+{
+    return qtauCodecRegistry::instance()->hasCodecForExt(ext);
+}
 
 inline qtauAudioCodec* codecForMime(const QString &mime, QIODevice &d, QObject *parent = 0)
 {

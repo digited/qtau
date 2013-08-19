@@ -20,12 +20,14 @@
 
 #include <QFileDialog>
 
+#include "editor/ui/Config.h"
 #include "editor/ui/piano.h"
 #include "editor/ui/dynDrawer.h"
 #include "editor/ui/noteEditor.h"
 #include "editor/ui/meter.h"
+#include "editor/ui/waveform.h"
 
-#include "editor/ui/Config.h"
+#include "editor/audio/Codec.h"
 
 const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
 
@@ -401,6 +403,7 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     doc = &s;
 
     connect(noteEditor, SIGNAL(editorEvent(qtauEvent*)), doc, SLOT(onUIEvent(qtauEvent*)));
+    connect(noteEditor, SIGNAL(urisDropped(QList<QUrl>)), SLOT(onEditorUrisDropped(QList<QUrl>)));
 
     connect(doc, SIGNAL(dataReloaded()),       SLOT(onDocReloaded()));
     connect(doc, SIGNAL(modifiedStatus(bool)), SLOT(onDocStatus(bool)));
@@ -413,7 +416,12 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     connect(this, SIGNAL(loadUST(QString)), &c, SLOT(onLoadUST(QString)));
     connect(this, SIGNAL(saveUST(QString,bool)), &c, SLOT(onSaveUST(QString,bool)));
 
-    //connect(ui->actionPlay, SIGNAL(triggered()), &c, SLOT(synthesize()));
+    connect(this, SIGNAL(loadAudio(QString)), &c, SLOT(onLoadAudio(QString)));
+
+    connect(ui->actionPlay,   SIGNAL(triggered()), &c, SLOT(playAudio()));
+    connect(ui->actionStop,   SIGNAL(triggered()), &c, SLOT(stopAudio()));
+    connect(ui->actionBack,   SIGNAL(triggered()), &c, SLOT(backAudio()));
+    connect(ui->actionRepeat, SIGNAL(triggered()), &c, SLOT(repeatAudio()));
 
     //-----------------------------------------------------------------------
     connect(piano, SIGNAL(keyPressed(int,int)),  &c, SLOT(pianoKeyPressed (int,int)));
@@ -743,4 +751,30 @@ void MainWindow::onDocEvent(qtauEvent* event)
 {
     if (event->type() >= ENoteEvents::add && event->type() <= ENoteEvents::effect)
         noteEditor->onEvent(event);
+}
+
+void MainWindow::onEditorUrisDropped(QList<QUrl> uris)
+{
+    if (!uris.isEmpty())
+    {
+        QFileInfo fi(uris.first().toString());
+
+        if (uris.size() > 1)
+            vsLog::i("Multiple URIs dropped, currently using only first one");
+
+        if (fi.exists() && !fi.isDir() && !fi.suffix().isEmpty()) // if it's an existing file with some extension
+        {
+            // maybe it's a note/lyrics file? (ust/vsq/vsqx/midi)
+            if (fi.suffix() == "ust") // TODO: support many, or do something like audio codecs registry
+            {
+                emit loadUST(fi.absoluteFilePath());
+            }
+            else if (isAudioExtSupported(fi.suffix())) // or maybe it's an audio? (try audio codecs)
+            {
+                emit loadAudio(fi.absoluteFilePath());
+            }
+            else
+                vsLog::e("File extension not supported: " + fi.suffix());
+        }
+    }
 }

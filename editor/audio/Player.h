@@ -2,6 +2,7 @@
 #define QTAU_AUDIO_PLAYER_H
 
 #include <QObject>
+#include <QAudio>
 
 class QAudioOutput;
 class qtauAudioSource;
@@ -22,6 +23,10 @@ public:
 
 signals:
     void playbackEnded();
+
+public slots:
+    void onQtmmStateChanged(QAudio::State);
+    void onTick();
 
 protected:
     QAudioOutput *audioOutput;

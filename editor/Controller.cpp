@@ -4,17 +4,23 @@
 #include "editor/Controller.h"
 #include "editor/Events.h"
 #include "editor/PluginInterfaces.h"
-#include "editor/audio/Player.h"
 #include "editor/Utils.h"
 
-#include <QtWidgets/QApplication>
+#include "editor/audio/Player.h"
+#include "editor/audio/Codec.h"
+#include "editor/audio/CodecBase.h"
 
+#include <QtWidgets/QApplication>
 #include <QPluginLoader>
 
 
 qtauController::qtauController(QObject *parent) :
     QObject(parent), audio(0), activeSession(0)
 {
+    qtauCodecRegistry::instance()->addCodec(new qtauWavCodecFactory());
+    //qtauCodecRegistry::instance()->addCodec(new qtauFlacCodecFactory());
+    //qtauCodecRegistry::instance()->addCodec(new qtauOggCodecFactory());
+
     events = new qtauEventManager(this);
     player = new qtmmPlayer(this);
 
@@ -155,38 +161,6 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
 }
 
 
-// TODO: temp code, rewrite properly
-void qtauController::synthesize()
-{
-//    if (activeSession && !activeSession->isEmpty())
-//    {
-//        if (!synths.isEmpty())
-//        {
-//            IResampler *r = synths.values().first();
-//            QDir teto(qApp->applicationDirPath());
-//            teto.cd("../workdir");
-
-//            if (teto.cd("vb/teto"))
-//            {
-//                qDebug() << "Teto found!";
-//                r->setVoicebank(teto.absolutePath());
-//                r->setVocals(activeSession->ustRef());
-
-//                audio = new qtauAudio("", this);
-//                r->resample(*audio);
-//                player->play(audio);
-//            }
-//            else
-//                qDebug() << "Teto not found!";
-//        }
-//        else
-//            qDebug() << "Controller: no synthesizers registered!";
-//    }
-//    else
-//        qDebug() << "Controller: nothing to synthesize!";
-}
-
-
 void qtauController::onAppMessage(const QString &msg)
 {
     vsLog::i("IPC message: " + msg);
@@ -201,4 +175,52 @@ void qtauController::pianoKeyPressed(int /*octaveNum*/, int /*keyNum*/)
 void qtauController::pianoKeyReleased(int /*octaveNum*/, int /*keyNum*/)
 {
     //qDebug() << "piano key released: " << octaveNum << keyNum;
+}
+
+void qtauController::onLoadAudio(QString fileName)
+{
+    if (!fileName.isEmpty())
+    {
+        QFileInfo fi(fileName);
+
+        if (fi.exists() && !fi.isDir() && !fi.suffix().isEmpty())
+        {
+            QFile f(fileName);
+
+            if (f.open(QFile::ReadOnly))
+            {
+                qtauAudioCodec  *ac = codecForExt(fi.suffix(), f, this);
+                qtauAudioSource *as = ac->cacheAll();
+                f.close();
+
+                player->play(as);
+            }
+            else
+                vsLog::e("Could not open file " + fileName);
+        }
+        else
+            vsLog::e("Wrong file name: " + fileName);
+    }
+    else
+        vsLog::e("Controller was requested to load audio with empty filename! Spam hatemail to admin@microsoft.com");
+}
+
+void qtauController::playAudio()
+{
+    //
+}
+
+void qtauController::stopAudio()
+{
+    //
+}
+
+void qtauController::backAudio()
+{
+    //
+}
+
+void qtauController::repeatAudio()
+{
+    //
 }

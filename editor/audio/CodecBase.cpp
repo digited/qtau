@@ -40,7 +40,11 @@ qtauAudioSource* qtauWavCodec::cacheAll()
         if (!dev->isSequential())
             dev->seek(_data_chunk_location); // else it should already be there
 
+        fmt.setCodec("audio/pcm"); // it's raw data now
+
+        buf.open(QIODevice::WriteOnly);
         buf.write(dev->readAll());
+        buf.close();
 
         result = new qtauAudioSource(buf, fmt, this->parent());
     }

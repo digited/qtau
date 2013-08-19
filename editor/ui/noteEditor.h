@@ -3,6 +3,7 @@
 
 #include "editor/Utils.h"
 #include "editor/ui/Config.h"
+#include <QUrl>
 
 class qtauEvent_NoteAddition;
 class qtauEvent_NoteMove;
@@ -57,6 +58,8 @@ signals:
     void noteText  (qtauEvent_NoteText     *event);
     void noteEffect(qtauEvent_NoteEffect   *event);
 
+    void urisDropped(QList<QUrl> uris);
+
 public slots:
     void onEvent(qtauEvent *e);
     void lazyUpdate(); // use this instead of update() - Qt is drawing much faster than display updates
@@ -70,6 +73,10 @@ protected:
     void mousePressEvent      (QMouseEvent  *event);
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
+
+    void dragEnterEvent(QDragEnterEvent *);
+    void dragMoveEvent(QDragMoveEvent *);
+    void dropEvent(QDropEvent *);
 
     noteSetup        setup;
     qne::editorState state;

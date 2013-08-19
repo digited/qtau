@@ -4,6 +4,8 @@
 
 #include <QAudioOutput>
 
+#include "QFile"
+
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :
     QObject(parent), audioOutput(0)
@@ -43,7 +45,11 @@ bool qtmmPlayer::play(qtauAudioSource *a)
             if (info.isFormatSupported(a->getAudioFormat()))
             {
                 audioOutput = new QAudioOutput(a->getAudioFormat(), this);
-                connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(finishedPlaying(QAudio::State)));
+
+                connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
+                connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
+
+                audioOutput->setVolume(0.5);
                 audioOutput->start(a);
 
                 result = true;
@@ -82,4 +88,31 @@ void qtmmPlayer::stop()
 {
     if (audioOutput)
         audioOutput->stop();
+}
+
+void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
+{
+    switch (st)
+    {
+    case QAudio::ActiveState:
+        qDebug() << "active";
+        break;
+    case QAudio::SuspendedState:
+        qDebug() << "suspended";
+        break;
+    case QAudio::StoppedState:
+        qDebug() << "stopped";
+        break;
+    case QAudio::IdleState:
+        qDebug() << "idle";
+        break;
+    default:
+        vsLog::e(QString("Unknown Qtmm Audio state: %1").arg(st));
+        break;
+    }
+}
+
+void qtmmPlayer::onTick()
+{
+    qDebug() << audioOutput->processedUSecs();
 }
