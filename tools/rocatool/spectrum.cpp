@@ -15,7 +15,7 @@
 Spectrum::Spectrum(QWidget *parent) :
     QWidget(parent), audio(0), spectrumCache(0)
 {
-    setAcceptDrops(true);
+    setAcceptDrops(false); // disabled for now - whole window will handle a single dropped item
 }
 
 void Spectrum::cacheSpectrum()

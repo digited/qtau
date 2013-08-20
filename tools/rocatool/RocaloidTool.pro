@@ -12,7 +12,8 @@ HEADERS = \
     ../../editor/audio/Player.h \
     ../../editor/audio/CodecBase.h \
     ../../editor/audio/Codec.h \
-    ../../editor/Utils.h
+    ../../editor/Utils.h \
+    Interface.h
 
 SOURCES = \
     main.cpp \

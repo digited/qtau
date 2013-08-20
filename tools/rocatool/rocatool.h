@@ -10,6 +10,7 @@ class Spectrum;
 class QIcon;
 class QSlider;
 class QPushButton;
+class QLabel;
 
 
 namespace Ui {
@@ -24,48 +25,74 @@ public:
     explicit RocaTool(QWidget *parent = 0);
     ~RocaTool();
 
+    void synthesizeWav(); // TODO:
+
 signals:
     //
 
 public slots:
-    void onLoadWavBefore(QString fileName);
-    void onLoadWavAfter (QString fileName);
+    void onLoadWav(QString fileName);
 
-    void onF0Moved(int);
-    void onF1Moved(int);
-    void onF2Moved(int);
-    void onF3Moved(int);
+    void onbF1(int);
+    void onbF2(int);
+    void onbF3(int);
 
-    void onPlayBefore();
-    void onPlayAfter();
+    void onaF1(int);
+    void onaF2(int);
+    void onaF3(int);
+
+    void onbS1(int);
+    void onbS2(int);
+    void onbS3(int);
+
+    void onaS1(int);
+    void onaS2(int);
+    void onaS3(int);
+
+    void onPlay();
 
 protected:
-    Spectrum *before;
-    Spectrum *after;
+    Spectrum *spectrumBefore;
+    Spectrum *spectrumAfter;
 
     qtauAudioSource *wavBefore;
     qtauAudioSource *wavAfter;
 
     qtmmPlayer *player;
 
-    QSlider *F0;
-    QSlider *F1;
-    QSlider *F2;
-    QSlider *F3;
+    //-------- slider groups ----------
+    QSlider *bF1;
+    QSlider *bF2;
+    QSlider *bF3;
 
-    QPushButton *playBefore;
-    QPushButton *playAfter;
+    QSlider *bS1;
+    QSlider *bS2;
+    QSlider *bS3;
 
-    QIcon *playIcon;
-    QIcon *stopIcon;
+    QSlider *aF1;
+    QSlider *aF2;
+    QSlider *aF3;
 
-    bool playingBefore;
-    bool playingAfter;
+    QSlider *aS1;
+    QSlider *aS2;
+    QSlider *aS3;
 
-    void doStopBefore();
-    void doStopAfter();
-    void doPlayBefore();
-    void doPlayAfter();
+    QLabel  *bF1val;
+    QLabel  *bF2val;
+    QLabel  *bF3val;
+
+    QLabel  *bS1val;
+    QLabel  *bS2val;
+    QLabel  *bS3val;
+
+    QLabel  *aF1val;
+    QLabel  *aF2val;
+    QLabel  *aF3val;
+
+    QLabel  *aS1val;
+    QLabel  *aS2val;
+    QLabel  *aS3val;
+    //-------------------------------
 
     qtauAudioSource* loadAudio(const QString &fileName);
 
