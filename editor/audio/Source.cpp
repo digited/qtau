@@ -19,6 +19,12 @@ qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObjec
         vsLog::d("Copying audio source with an empty buffer - what was the point of copying then?");
 }
 
+qtauAudioSource::~qtauAudioSource()
+{
+    if (isOpen())
+        close();
+}
+
 // -------------------- generators ----------------------------
 
 //qtauAudioSource genWave(qint64 lenghMs, float frequencyHz, int sampleRate, bool stereo, QObject *parent)

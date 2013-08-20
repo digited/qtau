@@ -13,6 +13,7 @@ class qtauAudioSource : public QBuffer
 public:
     explicit qtauAudioSource(QObject *parent = 0);
     explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
+    ~qtauAudioSource();
 
     QAudioBuffer getAudioBuffer() { return QAudioBuffer(this->buffer(), fmt); }
     QAudioFormat getAudioFormat() { return fmt; }

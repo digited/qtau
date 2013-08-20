@@ -28,6 +28,7 @@ public:
 protected:
     QString _ext;
     QString _mime;
+
 };
 
 

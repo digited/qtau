@@ -7,6 +7,8 @@
 #include "tools/utauloid/ust.h"
 #include "editor/NoteEvents.h"
 
+class qtauAudioSource;
+
 
 /** Work session that contains one voice setup (notes/lyrics/effects)
  and voicebank selection+setup to synthesize one song.
@@ -21,6 +23,9 @@ public:
 
     bool loadUST(QString fileName);
 
+    void setSynthesizedVocal(qtauAudioSource &s);
+    void setBackgroundAudio (qtauAudioSource &s);
+
     QStringList ustStrings(bool selectionOnly = false);
     QByteArray  ustBinary();
     const ust&  ustRef();
@@ -30,10 +35,19 @@ public:
     void setDocName(const QString &name);
     void setFilePath(const QString &fp);
 
-    bool isSessionEmpty()    { return data.notes.isEmpty(); } /// returns true if doesn't contain any data
-    bool isSessionModified() { return isModified; }           /// if has changes from last save/load
+    bool isSessionEmpty()    const { return noteMap.isEmpty(); } /// returns true if doesn't contain any data
+    bool isSessionModified() const { return isModified; }        /// if has changes from last save/load
 
-    void setModified(bool m) { isModified = m; }
+    void setModified(bool m)       { isModified = m; }
+
+    typedef enum {
+        nothingToPlay = 0,
+        stopped,
+        playing,
+        paused
+    } EPlayerState;
+
+    EPlayerState playerState() const { return playSt; }
 
 signals:
     void modifiedStatus(bool); /// if document is modified
@@ -41,6 +55,9 @@ signals:
     void redoStatus    (bool); /// if can apply previously reverted action
 
     void dataReloaded();       /// when data is changed completely
+
+    void vocalSet(); // when session gets synthesized audio from score
+    void musicSet(); // when user adds bg (off-vocal?) music to play with synthesized vocals
 
 public slots:
     void onUIEvent(qtauEvent *);
@@ -50,6 +67,9 @@ protected:
     QString filePath;
     QString docName;
     bool    isModified;
+
+    qtauAudioSource *vocal;
+    qtauAudioSource *music;
 
     QMap<qint64, ust_note> noteMap; // need to store copies until changing data structure to something better
     ust data; // TODO: nite vector inside is obviously unsuitable, needs changing to something else
@@ -61,6 +81,8 @@ protected:
     void applyEvent_NoteEffects(const qtauEvent_NoteEffect   &event);
 
     void stackChanged();
+
+    EPlayerState playSt;
 };
 
 #endif // SESSION_H

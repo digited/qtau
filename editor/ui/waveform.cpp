@@ -21,7 +21,7 @@ void qtauWaveform::setOffset(int off)
     offset = off;
 }
 
-void qtauWaveform::setPCM(qtauPCM &pcm)
+void qtauWaveform::setPCM(qtauAudioSource &pcm)
 {
     wave = &pcm;
 }

@@ -411,6 +411,9 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onRedoStatus(bool)));
 
     connect(doc, SIGNAL(onEvent(qtauEvent*)), SLOT(onDocEvent(qtauEvent*)));
+
+    connect(doc, SIGNAL(vocalSet()),          SLOT(onVocalAudioChanged()));
+    connect(doc, SIGNAL(musicSet()),          SLOT(onMusicAudioChanged()));
     //-----------------------------------------------------------------------
 
     connect(this, SIGNAL(loadUST(QString)), &c, SLOT(onLoadUST(QString)));
@@ -777,4 +780,14 @@ void MainWindow::onEditorUrisDropped(QList<QUrl> uris)
                 vsLog::e("File extension not supported: " + fi.suffix());
         }
     }
+}
+
+void MainWindow::onVocalAudioChanged()
+{
+    // show vocal waveform panel and send audioSource to it for generation
+}
+
+void MainWindow::onMusicAudioChanged()
+{
+    // show & fill music waveform panel
 }

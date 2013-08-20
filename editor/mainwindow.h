@@ -59,6 +59,9 @@ public slots:
     void onOpenUST();
     void onSaveUST();
 
+    void onVocalAudioChanged();
+    void onMusicAudioChanged();
+
     void onEditorUrisDropped(QList<QUrl> uris);
 
     void notesVScrolled(int);

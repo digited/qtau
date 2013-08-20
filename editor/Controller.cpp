@@ -190,9 +190,11 @@ void qtauController::onLoadAudio(QString fileName)
             if (f.open(QFile::ReadOnly))
             {
                 qtauAudioCodec  *ac = codecForExt(fi.suffix(), f, this);
+                bool cached = ac->cacheAll();
+                f.close();
 
-                if (ac->cacheAll())
-                    player->play(ac);
+                if (cached)
+                    activeSession->setBackgroundAudio(*ac);
                 else
                     vsLog::e("Error caching audio");
 

@@ -1,5 +1,6 @@
 #include "editor/Session.h"
 #include "editor/Utils.h"
+#include "editor/audio/Source.h"
 
 #include <QFile>
 #include <QTextStream>
@@ -7,7 +8,7 @@
 
 
 qtauSession::qtauSession(QObject *parent) :
-    qtauEventManager(parent), docName(tr("Untitled")), isModified(false)
+    qtauEventManager(parent), docName(tr("Untitled")), isModified(false), vocal(0), music(0)
 {
     data.clear();
 }
@@ -302,7 +303,27 @@ void qtauSession::onUIEvent(qtauEvent *e)
 
 void qtauSession::stackChanged()
 {
+    isModified = canUndo(); // TODO: something better
+
     emit undoStatus(canUndo());
     emit redoStatus(canRedo());
     emit modifiedStatus(isSessionModified());
+}
+
+void qtauSession::setSynthesizedVocal(qtauAudioSource &s)
+{
+    if (vocal)
+        delete vocal;
+
+    vocal = &s;
+    emit vocalSet();
+}
+
+void qtauSession::setBackgroundAudio(qtauAudioSource &s)
+{
+    if (music)
+        delete music;
+
+    music = &s;
+    emit musicSet();
 }

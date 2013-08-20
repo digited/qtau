@@ -4,7 +4,7 @@
 #include <QWidget>
 
 class QPixmap;
-class qtauPCM;
+class qtauAudioSource;
 
 class qtauWaveform : public QWidget
 {
@@ -14,7 +14,7 @@ public:
     ~qtauWaveform();
 
     void setOffset(int off);
-    void setPCM(qtauPCM &pcm);
+    void setPCM(qtauAudioSource &pcm);
 
 signals:
     void scrolled(int delta);
@@ -34,8 +34,8 @@ protected:
     void wheelEvent           (QWheelEvent  *event);
 
     int offset;
+    qtauAudioSource *wave;
 
-    qtauPCM *wave;
     QPixmap *bgCache;
     void updateCache();
 };
