@@ -8,13 +8,13 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QToolBar>
+#include <QGridLayout>
 
 #include <QUrl>
 #include <QFileInfo>
 #include <QFile>
-
+#include <QMimeData>
 #include <qevent.h>
-#include <QGridLayout>
 
 #include "editor/audio/Player.h"
 #include "editor/audio/Codec.h"
@@ -65,6 +65,7 @@ RocaTool::RocaTool(QWidget *parent) :
     QMainWindow(parent), wavBefore(0), wavAfter(0), ui(new Ui::RocaWindow)
 {
     ui->setupUi(this);
+    setAcceptDrops(true);
     player = new qtmmPlayer(this);
     qtauCodecRegistry::instance()->addCodec(new qtauWavCodecFactory());
 
@@ -108,8 +109,13 @@ RocaTool::RocaTool(QWidget *parent) :
     aS2val = makeRightLabel("0", this);
     aS3val = makeRightLabel("0", this);
 
-    gl->addWidget(new QLabel("Before"), 0, 1, 1, 1);
-    gl->addWidget(new QLabel("After"),  0, 4, 1, 1);
+    QLabel *befLbl = new QLabel("Before");
+    QLabel *aftLbl = new QLabel("After");
+    befLbl->setAlignment(Qt::AlignCenter);
+    aftLbl->setAlignment(Qt::AlignCenter);
+
+    gl->addWidget(befLbl, 0, 1, 1, 1);
+    gl->addWidget(aftLbl,  0, 4, 1, 1);
 
     makeRowOfSliders(1, gl, "F1", bF1, bF1val, aF1, aF1val);
     makeRowOfSliders(2, gl, "F2", bF2, bF2val, aF2, aF2val);
@@ -124,6 +130,7 @@ RocaTool::RocaTool(QWidget *parent) :
 
     QToolBar *tb = new QToolBar(this);
     tb->addAction(ui->actionPlay);
+    tb->setFloatable(false);
     addToolBar(tb);
     //--------------------------------------------
 
@@ -193,6 +200,7 @@ void RocaTool::onLoadWav(QString fileName)
 
     if (audio)
     {
+        setWindowTitle(fileName + " :: Rocaloid Test Tool");
         player->stop();
 
         wavBefore = audio;
@@ -236,4 +244,32 @@ void RocaTool::onPlay()
 void RocaTool::synthesizeWav()
 {
     //
+}
+
+void RocaTool::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (e->mimeData()->hasFormat("text/uri-list"))
+        e->acceptProposedAction();
+}
+
+void RocaTool::dragMoveEvent(QDragMoveEvent *e)
+{
+    if (e->mimeData()->hasFormat("text/uri-list"))
+        e->acceptProposedAction();
+}
+
+void RocaTool::dropEvent(QDropEvent *e)
+{
+    QList<QUrl> uris;
+
+    foreach (const QByteArray &uriData, e->mimeData()->data("text/uri-list").split('\n'))
+        if (!uriData.isEmpty())
+            uris << QUrl::fromEncoded(uriData).toLocalFile().remove('\r');
+
+    qDebug() << uris;
+
+    QFileInfo fi(uris.first().toString());
+
+    if (fi.exists() && !fi.isDir() && fi.suffix() == "wav") // accepting only first one, if it's a ".wav"
+        onLoadWav(fi.absoluteFilePath());
 }

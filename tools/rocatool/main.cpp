@@ -10,17 +10,17 @@ void LoadWav(char* path)
     pRT->onLoadWav(QString(path));
 }
 
-void UpdateSpectrum1(float* DestArray)
+void UpdateSpectrum1(float* /*DestArray*/)
 {
     //
 }
 
-void UpdateSpectrum2(float* DestArray, FECSOLAState parameters)
+void UpdateSpectrum2(float* /*DestArray*/, FECSOLAState /*parameters*/)
 {
     //
 }
 
-void Synthesis(float* DestWave, FECSOLAState parameters)
+void Synthesis(float* /*DestWave*/, FECSOLAState /*parameters*/)
 {
     //
 }

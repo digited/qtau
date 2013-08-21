@@ -52,6 +52,10 @@ public slots:
     void onPlay();
 
 protected:
+    void dragEnterEvent(QDragEnterEvent *);
+    void dragMoveEvent(QDragMoveEvent *);
+    void dropEvent(QDropEvent *);
+
     Spectrum *spectrumBefore;
     Spectrum *spectrumAfter;
 
