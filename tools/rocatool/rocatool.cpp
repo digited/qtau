@@ -23,6 +23,47 @@
 const QString playStr = QObject::tr("Play");
 const QString stopStr = QObject::tr("Stop");
 
+inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+{
+    int     srcI = 0;
+    quint8 *U8   = 0;
+    int     srcIinc = stereo ? 2 : 1;
+
+    for (int i = 0; i < dstLen; ++i)
+    {
+        U8 = reinterpret_cast<quint8*>(src[srcI]);
+        dst[i] = (float)*U8;
+        srcI += srcIinc;
+    }
+}
+
+inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+{
+    int     srcI = 0;
+    qint16 *S16  = 0;
+    int     srcIinc = stereo ? 2*2 : 1*2;
+
+    for (int i = 0; i < dstLen; ++i)
+    {
+        S16 = reinterpret_cast<qint16*>(src[srcI]);
+        dst[i] = (float)*S16;
+        srcI += srcIinc;
+    }
+}
+
+inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+{
+    int    srcI = 0;
+    float *F32  = 0;
+    int    srcIinc = stereo ? 2*4 : 1*4;
+
+    for (int i = 0; i < dstLen; ++i)
+    {
+        F32 = reinterpret_cast<float*>(src[srcI]);
+        dst[i] = *F32;
+        srcI += srcIinc;
+    }
+}
 
 inline QLabel* makeLabel(const QString &txt, Qt::Alignment align, QWidget *parent = 0)
 {
@@ -204,7 +245,7 @@ void RocaTool::onLoadWav(QString fileName)
         player->stop();
 
         wavBefore = audio;
-        spectrumBefore->loadWav(*audio); // previous object will be deleted in spectrum here
+        //spectrumBefore->loadWav(*audio); // previous object will be deleted in spectrum here
     }
 }
 
@@ -233,29 +274,55 @@ void RocaTool::onaS3(int val) { aS3val->setText(QString("%1").arg((float)val / 1
 //----------- playback controls ---------------------
 void RocaTool::onPlay()
 {
-    player->stop();
+//    player->stop();
 
-    if (wavAfter)
+//    if (wavAfter)
+//    {
+//        if (!wavAfter->isOpen())
+//            wavAfter->open(QIODevice::ReadOnly);
+
+//        wavAfter->reset();
+//        player->play(wavAfter);
+//    }
+//    else if (wavBefore)
+//    {
+//        if (!wavBefore->isOpen())
+//            wavBefore->open(QIODevice::ReadOnly);
+
+//        wavBefore->reset();
+//        player->play(wavBefore);
+//    }
+
+    if (wavBefore)
     {
-        if (!wavAfter->isOpen())
-            wavAfter->open(QIODevice::ReadOnly);
+        FECSOLAState st;
+        st.F1 = aF1->value();
+        st.F2 = aF2->value();
+        st.F3 = aF3->value();
 
-        wavAfter->reset();
-        player->play(wavAfter);
+        st.S1 = aS1->value();
+        st.S2 = aS2->value();
+        st.S3 = aS3->value();
+
+        QAudioFormat fmt = wavBefore->getAudioFormat();
+        qint64 bufSize = wavBefore->size() / fmt.sampleSize() / fmt.channelCount() * 4;
+
+        float *waveData = (float*)malloc(bufSize + 4);
+
+        switch (fmt.sampleType())
+        {
+        case QAudioFormat::UnSignedInt: U8toFloat(wavBefore->data(), waveData, bufSize - 4, fmt.channelCount() > 1);
+            break;
+        case QAudioFormat::SignedInt:  S16toFloat(wavBefore->data(), waveData, bufSize - 4, fmt.channelCount() > 1);
+            break;
+        case QAudioFormat::Float:    FloattoFloat(wavBefore->data(), waveData, bufSize - 4, fmt.channelCount() > 1);
+            break;
+        default:
+            vsLog::e("Unknown sample format of wave!");
+        }
+
+        Synthesis(waveData, st);
     }
-    else if (wavBefore)
-    {
-        if (!wavBefore->isOpen())
-            wavBefore->open(QIODevice::ReadOnly);
-
-        wavBefore->reset();
-        player->play(wavBefore);
-    }
-}
-
-void RocaTool::synthesizeWav()
-{
-    //
 }
 
 void RocaTool::dragEnterEvent(QDragEnterEvent *e)
@@ -284,4 +351,30 @@ void RocaTool::dropEvent(QDropEvent *e)
 
     if (fi.exists() && !fi.isDir() && fi.suffix() == "wav") // accepting only first one, if it's a ".wav"
         onLoadWav(fi.absoluteFilePath());
+}
+
+void RocaTool::setBeforeSpectrum(float *data, int dataLen, FECSOLAState params)
+{
+    spectrumBefore->setSpectrumData(data, dataLen);
+
+    bF1->setValue(params.F1);
+    bF2->setValue(params.F2);
+    bF3->setValue(params.F3);
+
+    bS1->setValue(params.S1);
+    bS2->setValue(params.S2);
+    bS3->setValue(params.S3);
+}
+
+void RocaTool::setAfterSpectrum (float *data, int dataLen, FECSOLAState params)
+{
+    spectrumAfter->setSpectrumData(data, dataLen);
+
+    aF1->setValue(params.F1);
+    aF2->setValue(params.F2);
+    aF3->setValue(params.F3);
+
+    aS1->setValue(params.S1);
+    aS2->setValue(params.S2);
+    aS3->setValue(params.S3);
 }

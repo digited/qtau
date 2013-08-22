@@ -21,26 +21,64 @@ Spectrum::Spectrum(QWidget *parent) :
 void Spectrum::cacheSpectrum()
 {
     // cache audio pcm data to pixmap for fast rendering here
+    if (spectrumCache && spectrumCache->size() != this->size())
+    {
+        delete spectrumCache;
+        spectrumCache = 0;
+    }
+
+    if (!spectrumCache)
+        spectrumCache = new QPixmap(this->size());
+
+    spectrumCache->fill(Qt::white);
+
+    if (!spectrumData.isEmpty())
+    {
+        QVector<QLineF> lines;
+        QPointF prev, next;
+        float hOff = 0;
+        float hDelta = (float)width() / spectrumData.size();
+
+        for (int i = 0; i < spectrumData.size(); ++i)
+        {
+            next.setX(hOff);
+            next.setY((spectrumData[i] + 1.f) * (float)height() / 2.f);
+
+            lines.append(QLineF(prev, next));
+
+            hOff += hDelta;
+            prev = next;
+        }
+
+        QPainter p(spectrumCache);
+        p.drawLines(lines);
+    }
+
+    update();
 }
 
 void Spectrum::paintEvent(QPaintEvent *e)
 {
     QPainter p(this);
 
-    QBrush brush(p.brush());
-    brush.setStyle(Qt::Dense5Pattern);
-    brush.setColor(QColor(0xffffeab2));
+    if (spectrumCache)
+        p.drawPixmap(0, 0, *spectrumCache);
+    else
+    {
+        QBrush brush(p.brush());
+        brush.setStyle(Qt::Dense5Pattern);
+        brush.setColor(QColor(0xffffeab2));
 
-    p.setBrush(brush);
-    p.drawRect(e->rect());
+        p.setBrush(brush);
+        p.drawRect(e->rect());
 
-    p.drawText(e->rect(), "Here be spectrum!", QTextOption(Qt::AlignCenter));
+        p.drawText(e->rect(), "Here be spectrum!", QTextOption(Qt::AlignCenter));
+    }
 }
 
 void Spectrum::resizeEvent(QResizeEvent *)
 {
     cacheSpectrum();
-    update();
 }
 
 void Spectrum::dragEnterEvent(QDragEnterEvent *e)
@@ -78,5 +116,19 @@ void Spectrum::loadWav(qtauAudioSource &a)
 
     audio = &a;
     cacheSpectrum();
-    update();
+}
+
+void Spectrum::setSpectrumData(float *data, int len)
+{
+    if (data && len > 0)
+    {
+        spectrumData.clear();
+
+        for (int i = 0; i < len; ++i)
+            spectrumData.append(data[i]);
+
+        cacheSpectrum();
+    }
+    else
+        vsLog::e("Wrong spectrum data input! Ignoring...");
 }

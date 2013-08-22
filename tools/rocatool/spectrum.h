@@ -2,6 +2,7 @@
 #define SPECTRUM_H
 
 #include <QWidget>
+#include <QVector>
 
 class qtauAudioSource;
 class QPixmap;
@@ -14,6 +15,7 @@ public:
     explicit Spectrum(QWidget *parent = 0);
 
     void loadWav(qtauAudioSource &a);
+    void setSpectrumData(float *data, int len);
     
 signals:
     void audioDropped(QString fileName);
@@ -31,6 +33,8 @@ protected:
 
     qtauAudioSource *audio;
     QPixmap *spectrumCache;
+
+    QVector<float> spectrumData;
 
     void cacheSpectrum();
     

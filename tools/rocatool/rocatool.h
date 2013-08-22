@@ -2,6 +2,7 @@
 #define ROCATOOL_H
 
 #include <QtWidgets/QMainWindow>
+#include "Interface.h"
 
 class qtauAudioSource;
 class qtmmPlayer;
@@ -25,7 +26,8 @@ public:
     explicit RocaTool(QWidget *parent = 0);
     ~RocaTool();
 
-    void synthesizeWav(); // TODO:
+    void setBeforeSpectrum(float *data, int dataLen, FECSOLAState params);
+    void setAfterSpectrum (float *data, int dataLen, FECSOLAState params);
 
 signals:
     //

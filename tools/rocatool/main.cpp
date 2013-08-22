@@ -5,19 +5,19 @@
 RocaTool *pRT = 0;
 
 
-void LoadWav(char* path)
+void LoadWav(char *path)
 {
     pRT->onLoadWav(QString(path));
 }
 
-void UpdateSpectrum1(float* /*DestArray*/)
+void UpdateSpectrum1(float *data, int dataLen, FECSOLAState params)
 {
-    //
+    pRT->setBeforeSpectrum(data, dataLen, params);
 }
 
-void UpdateSpectrum2(float* /*DestArray*/, FECSOLAState /*parameters*/)
+void UpdateSpectrum2(float *data, int dataLen, FECSOLAState params)
 {
-    //
+    pRT->setAfterSpectrum(data, dataLen, params);
 }
 
 void Synthesis(float* /*DestWave*/, FECSOLAState /*parameters*/)
