@@ -236,9 +236,21 @@ void RocaTool::onPlay()
     player->stop();
 
     if (wavAfter)
+    {
+        if (!wavAfter->isOpen())
+            wavAfter->open(QIODevice::ReadOnly);
+
+        wavAfter->reset();
         player->play(wavAfter);
+    }
     else if (wavBefore)
+    {
+        if (!wavBefore->isOpen())
+            wavBefore->open(QIODevice::ReadOnly);
+
+        wavBefore->reset();
         player->play(wavBefore);
+    }
 }
 
 void RocaTool::synthesizeWav()

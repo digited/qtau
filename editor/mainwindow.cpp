@@ -34,6 +34,7 @@ const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
 const int CONST_MIN_PIANO_WIDTH     = 84;
 const int CONST_MIN_PIANO_HEIGHT    = 40;
 const int CONST_METER_HEIGHT        = 20;
+const int CONST_WAVEFORM_MIN_HEIGHT = 50;
 const int CONST_DRAWZONE_MIN_HEIGHT = 100;
 const int CONST_DYN_BUTTONS         = 10;
 
@@ -107,6 +108,64 @@ MainWindow::MainWindow(QWidget *parent) :
     hscr->setContextMenuPolicy(Qt::NoContextMenu);
     vscr->setContextMenuPolicy(Qt::NoContextMenu);
 
+    //---- vocal and music waveform panels, hidden until synthesized (vocal wave) and/or loaded (music wave)
+
+    QScrollBar *dummySB = new QScrollBar(this);
+    dummySB->setOrientation(Qt::Vertical);
+    dummySB->setRange(0,0);
+
+    QFrame *vocalControls = new QFrame(this);
+    vocalControls->setContentsMargins(0,0,0,0);
+    vocalControls->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_WAVEFORM_MIN_HEIGHT);
+    vocalControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+    vocalControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
+
+    vocalWave = new qtauWaveform(this);
+    vocalWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    vocalWave->setMinimumHeight(CONST_WAVEFORM_MIN_HEIGHT);
+    vocalWave->setContentsMargins(0,0,0,0);
+
+    QHBoxLayout *vocalWaveL = new QHBoxLayout();
+    vocalWaveL->setContentsMargins(0,0,0,0);
+    vocalWaveL->setSpacing(0);
+    vocalWaveL->addWidget(vocalControls);
+    vocalWaveL->addWidget(vocalWave);
+    vocalWaveL->addWidget(dummySB);
+
+    vocalWavePanel = new QWidget(this);
+    vocalWavePanel->setContentsMargins(0,0,0,0);
+    vocalWavePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    vocalWavePanel->setLayout(vocalWaveL);
+    vocalWavePanel->setVisible(false);
+
+    //---------
+
+    QFrame *musicControls = new QFrame(this);
+    musicControls->setContentsMargins(0,0,0,0);
+    musicControls->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_WAVEFORM_MIN_HEIGHT);
+    musicControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+    musicControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
+
+    musicWave = new qtauWaveform(this);
+    musicWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    musicWave->setMinimumHeight(CONST_WAVEFORM_MIN_HEIGHT);
+    musicWave->setContentsMargins(0,0,0,0);
+
+    QHBoxLayout *musicWaveL = new QHBoxLayout();
+    musicWaveL->setContentsMargins(0,0,0,0);
+    musicWaveL->setSpacing(0);
+    musicWaveL->addWidget(musicControls);
+    musicWaveL->addWidget(musicWave);
+    musicWaveL->addWidget(dummySB);
+
+    musicWavePanel = new QWidget(this);
+    musicWavePanel->setContentsMargins(0,0,0,0);
+    musicWavePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    musicWavePanel->setLayout(musicWaveL);
+    musicWavePanel->setVisible(false);
+
     //---- notes' dynamics setup area --------------
 
     QGridLayout *dynBtnL = new QGridLayout();
@@ -142,18 +201,14 @@ MainWindow::MainWindow(QWidget *parent) :
     drawZone->setMinimumHeight(CONST_DRAWZONE_MIN_HEIGHT);
     drawZone->setContentsMargins(0,0,0,0);
 
-    QScrollBar *dummySB = new QScrollBar(this);
-    dummySB->setOrientation(Qt::Vertical);
-    dummySB->setRange(0,0);
-
-    QGridLayout *singParamsL = new QGridLayout();
+    QHBoxLayout *singParamsL = new QHBoxLayout();
     singParamsL->setContentsMargins(0,0,0,0);
     singParamsL->setSpacing(0);
-    singParamsL->addWidget(dynBtnPanel, 0, 0, 1, 1);
-    singParamsL->addWidget(drawZone,    0, 1, 1, 1);
-    singParamsL->addWidget(dummySB,     0, 2, 1, 1);
+    singParamsL->addWidget(dynBtnPanel);
+    singParamsL->addWidget(drawZone);
+    singParamsL->addWidget(dummySB);
 
-    QWidget *drawZonePanel = new QWidget(this);
+    drawZonePanel = new QWidget(this);
     drawZonePanel->setContentsMargins(0,0,0,0);
     drawZonePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
@@ -183,9 +238,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QSplitter *spl = new QSplitter(Qt::Vertical, this);
     spl->setContentsMargins(0,0,0,0);
     spl->addWidget(editorUpperPanel);
+    spl->addWidget(vocalWavePanel);
+    spl->addWidget(musicWavePanel);
     spl->addWidget(drawZonePanel);
     spl->setStretchFactor(0, 1);
     spl->setStretchFactor(1, 0);
+    spl->setStretchFactor(2, 0);
+    spl->setStretchFactor(3, 0);
 
     QVBoxLayout *edVBL = new QVBoxLayout();
     edVBL->setContentsMargins(0,0,0,0);
@@ -386,7 +445,7 @@ MainWindow::MainWindow(QWidget *parent) :
     vsLog::s(QString("Launching QTau %1 @ %2").arg(QTAU_VERSION).arg(__DATE__));
 
     vsLog::i("//---------------------------------------------");
-    vsLog::r();
+    vsLog::r(); // print stored messages from program startup
     vsLog::i("//---------------------------------------------");
     vsLog::n();
 }
@@ -785,9 +844,17 @@ void MainWindow::onEditorUrisDropped(QList<QUrl> uris)
 void MainWindow::onVocalAudioChanged()
 {
     // show vocal waveform panel and send audioSource to it for generation
+    vocalWavePanel->setVisible(true);
+    vocalWave->setAudio(doc->getVocal());
+
+    ui->actionPlay->setEnabled(true); // it isn't at startup because nothing to play
 }
 
 void MainWindow::onMusicAudioChanged()
 {
     // show & fill music waveform panel
+    musicWavePanel->setVisible(true);
+    musicWave->setAudio(doc->getMusic());
+
+    ui->actionPlay->setEnabled(true);
 }

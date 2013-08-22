@@ -15,6 +15,7 @@ class qtauNoteEditor;
 class qtauMeterBar;
 class qtauDynDrawer;
 class qtauDynLabel;
+class qtauWaveform;
 
 class QScrollBar;
 class QSlider;
@@ -113,6 +114,13 @@ protected:
     qtauNoteEditor *noteEditor;
     qtauDynDrawer  *drawZone;
     qtauMeterBar   *meter;
+
+    qtauWaveform   *vocalWave;
+    qtauWaveform   *musicWave;
+
+    QWidget        *vocalWavePanel; // used to switch its visibility, hidden by default
+    QWidget        *musicWavePanel;
+    QWidget        *drawZonePanel;
 
     qtauDynLabel   *fgDynLbl, *bgDynLbl;
 

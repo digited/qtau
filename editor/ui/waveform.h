@@ -1,6 +1,7 @@
 #ifndef WAVEFORM_H
 #define WAVEFORM_H
 
+#include "editor/Utils.h"
 #include <QWidget>
 
 class QPixmap;
@@ -14,7 +15,8 @@ public:
     ~qtauWaveform();
 
     void setOffset(int off);
-    void setPCM(qtauAudioSource &pcm);
+    void configure(int tempo, int noteWidth);
+    void setAudio(qtauAudioSource *pcm); // setting 0 means just remove current and show nothing
 
 signals:
     void scrolled(int delta);
@@ -38,6 +40,13 @@ protected:
 
     QPixmap *bgCache;
     void updateCache();
+
+    int bpm;
+    int beatWidth; // in pixels
+
+    float pixelsPerSecond;
+    float samplesPerSecond;
+    float samplesPerPixel;
 };
 
 #endif // WAVEFORM_H

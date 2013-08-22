@@ -49,6 +49,9 @@ public:
 
     EPlayerState playerState() const { return playSt; }
 
+    qtauAudioSource* getVocal() { return vocal; } // gotta be careful with pointers since they'll change on synth/drop
+    qtauAudioSource* getMusic() { return music; }
+
 signals:
     void modifiedStatus(bool); /// if document is modified
     void undoStatus    (bool); /// if can undo last stored action

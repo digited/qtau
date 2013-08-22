@@ -169,6 +169,7 @@ void qtauController::onAppMessage(const QString &msg)
 
 void qtauController::pianoKeyPressed(int /*octaveNum*/, int /*keyNum*/)
 {
+    // should play "a" of corresponding pitch
     //qDebug() << "piano key pressed: " << octaveNum << keyNum;
 }
 

@@ -15,7 +15,11 @@ qtauSession::qtauSession(QObject *parent) :
 
 qtauSession::~qtauSession()
 {
-    //
+    if (vocal)
+        delete vocal;
+
+    if (music)
+        delete music;
 }
 
 qtauEvent_NoteAddition *util_makeAddNotesEvent(const ust &u)
