@@ -25,10 +25,17 @@ typedef struct FECSOLAState
     };
 } FECSOLAState;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void LoadWav(char* path);
-void UpdateSpectrum1(float* DestArray, int arrLength, FECSOLAState parameters);
-void UpdateSpectrum2(float* DestArray, int arrLength, FECSOLAState parameters);
-void Synthesis(float* DestWave, FECSOLAState parameters);
+void LoadWav(float* wave, char channels, int sampleRate, unsigned long totalSamples);
+void UpdateSpectrum1(float* DestArray, FECSOLAState *parameters); // 512 floats
+void UpdateSpectrum2(float* DestArray, FECSOLAState *parameters); // 512 floats
+void Synthesis(float* DestWave, int sampleRate, FECSOLAState paramsBefore, FECSOLAState paramsAfter); // dest wave is 10 seconds
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // INTERFACE_H

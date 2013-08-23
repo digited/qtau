@@ -125,7 +125,7 @@ void Spectrum::setSpectrumData(float *data, int len)
         spectrumData.clear();
 
         for (int i = 0; i < len; ++i)
-            spectrumData.append(data[i]);
+            spectrumData.append(data[i]); // NOTE: this is very dangerous. Let's hope that len is correct
 
         cacheSpectrum();
     }

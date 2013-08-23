@@ -26,26 +26,15 @@ public:
     explicit RocaTool(QWidget *parent = 0);
     ~RocaTool();
 
-    void setBeforeSpectrum(float *data, int dataLen, FECSOLAState params);
-    void setAfterSpectrum (float *data, int dataLen, FECSOLAState params);
-
 signals:
     //
 
 public slots:
     void onLoadWav(QString fileName);
 
-    void onbF1(int);
-    void onbF2(int);
-    void onbF3(int);
-
     void onaF1(int);
     void onaF2(int);
     void onaF3(int);
-
-    void onbS1(int);
-    void onbS2(int);
-    void onbS3(int);
 
     void onaS1(int);
     void onaS2(int);
@@ -101,6 +90,12 @@ protected:
     //-------------------------------
 
     qtauAudioSource* loadAudio(const QString &fileName);
+    void updateSpectrum2();
+
+    bool needsSynthesis;
+
+    QByteArray spectrumDataBefore;
+    QByteArray spectrumDataAfter;
 
 private:
     Ui::RocaWindow *ui;
