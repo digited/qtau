@@ -75,7 +75,7 @@ inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo
     for (int i = 0; i < dstLen; ++i)
     {
         U8 = reinterpret_cast<quint8*>(src[srcI]);
-        dst[i] = (float)*U8;
+        dst[i] = ((float)*U8 - 128) / 256;
         srcI += srcIinc;
     }
 }
@@ -83,13 +83,15 @@ inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo
 inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
     int     srcI = 0;
-    qint16 *S16  = 0;
+    signed int   S16;
+    unsigned int U16;
     int     srcIinc = stereo ? 2*2 : 1*2;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        S16 = reinterpret_cast<qint16*>(src[srcI]);
-        dst[i] = (float)*S16;
+        U16 = (int)src[srcI] + (int)src[srcI + 1] * 256;
+        S16 = (signed int)U16;
+        dst[i] = ((float) S16) / 32767;
         srcI += srcIinc;
     }
 }
@@ -110,12 +112,10 @@ inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool ste
 
 inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
 {
-    QBuffer b;
-    b.open(QIODevice::WriteOnly);
     QAudioFormat f = as.getAudioFormat();
 
     qint64 tenSeconds = f.sampleRate() * 10;
-    qint64 samples = qMin(as.size() / f.sampleSize(), tenSeconds); // NOTE: max 10 seconds
+    qint64 samples = qMin(as.size() * 8 / f.sampleSize(), tenSeconds); // NOTE: max 10 seconds
 
     QByteArray ba((samples + f.sampleRate()) * 4, '\0'); // +1 second for safety
 
@@ -134,10 +134,10 @@ inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
     if (f.sampleType() != QAudioFormat::Float)
     {
         f.setSampleType(QAudioFormat::Float);
-        f.setSampleSize(4);
+        f.setSampleSize(32);
     }
 
-    b.close();
+    QBuffer b(&ba);
 
     return new qtauAudioSource(b, f);
 }
@@ -371,14 +371,13 @@ void RocaTool::onPlay()
             stA.S1 = aS1->value();
             stA.S2 = aS2->value();
             stA.S3 = aS3->value();
-
             Synthesis((float*)wavAfter->buffer().data(), wavAfter->getAudioFormat().sampleRate(), stB, stA);
             needsSynthesis = false;
         }
 
         player->stop();
         wavAfter->reset();
-        player->play(wavAfter);
+        player->play(wavBefore);
     }
 }
 
