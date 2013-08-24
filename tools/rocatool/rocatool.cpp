@@ -83,14 +83,14 @@ inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo
 inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
     int     srcI = 0;
-    signed int   S16;
-    unsigned int U16;
+    signed short int   S16;
+    unsigned short int U16;
     int     srcIinc = stereo ? 2*2 : 1*2;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        U16 = (int)src[srcI] + (int)src[srcI + 1] * 256;
-        S16 = (signed int)U16;
+        U16 = (unsigned short int)(unsigned char)src[srcI] + (unsigned short int)(unsigned char)src[srcI + 1] * 256;
+        S16 = U16;
         dst[i] = ((float) S16) / 32767;
         srcI += srcIinc;
     }
@@ -313,7 +313,7 @@ void RocaTool::onLoadWav(QString fileName)
         // 10 seconds of floats with current sample rate (+1 for safety)
         spectrumDataBefore.resize(SPECTRUM_FLOATS * 4);
         FECSOLAState stateBefore;
-        UpdateSpectrum1((float*)spectrumDataBefore.data(), &stateBefore);
+        UpdateSpectrum1((float*)spectrumDataBefore.data(), (float*)wavBefore -> buffer().data(), &stateBefore);
         spectrumDataAfter = spectrumDataBefore;
 
         bF1->setValue(stateBefore.F1);
