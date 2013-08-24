@@ -307,7 +307,7 @@ void RocaTool::onLoadWav(QString fileName)
         delete audio; // transformed to floats, not needed anymore
 
         QAudioFormat fmt = wavBefore->getAudioFormat();
-        long totalSamples = wavBefore->size() / fmt.sampleSize();
+        long totalSamples = wavBefore->size() * 8 / fmt.sampleSize();
         LoadWav((float*)wavBefore->buffer().data(), fmt.channelCount(), fmt.sampleRate(), totalSamples);
 
         // 10 seconds of floats with current sample rate (+1 for safety)

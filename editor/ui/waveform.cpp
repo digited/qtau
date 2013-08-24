@@ -17,26 +17,69 @@ qtauWaveform::~qtauWaveform()
         delete bgCache;
 }
 
+inline void drawCacheFromU8(int totalSamples, float framesVisible, int channelCount,
+                            const QByteArray &data, QVector<QLine> &lines)
+{
+    //
+}
+
+inline void drawCacheFromS16(int totalSamples, float framesVisible, int channelCount,
+                             const QByteArray &data, QVector<QLine> &lines)
+{
+    //
+}
+
+inline void drawCacheFromFloat(int totalSamples, float framesVisible, int channelCount,
+                               const QByteArray &data, QVector<QLine> &lines)
+{
+    //
+}
+
 void qtauWaveform::updateCache()
 {
     // draw waveform to cache
-    if (bgCache->width() < this->width() * 2)
+    if (bgCache->width() < this->width()/* * 2*/)
     {
         delete bgCache;
-        bgCache = new QPixmap(this->rect().height(), this->width() * 2);
+        bgCache = new QPixmap(this->rect().height(), this->width()/* * 2*/);
     }
 
     bgCache->fill(Qt::transparent);
 
-    if (wave)
+    if (wave && !wave->data().isEmpty())
     {
-        const QByteArray   &pcm = wave->data();
-        //const QAudioFormat &fmt = wave->getAudioFormat();
+        const QAudioFormat &fmt = wave->getAudioFormat();
 
-        if (!pcm.isEmpty())
+        float fW = width(); // TODO: use pixmap width?
+        float noteTime = 60.f / bpm; // in seconds
+        float notesVisible = fW / beatWidth;
+        qint64 timeVisible = notesVisible * noteTime * 1000000; // in microsec
+        framesVisible = fmt.framesForDuration(timeVisible);
+
+        int totalSamples = wave->size() * 8 / fmt.sampleSize();
+
+        QVector<QLine> lines;
+
+        switch (fmt.sampleType())
         {
-            //qint64 framesVisible = fmt.framesForDuration(60.f / bpm);
+        case QAudioFormat::UnSignedInt: drawCacheFromU8   (totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
+            break;
+        case QAudioFormat::SignedInt:   drawCacheFromS16  (totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
+            break;
+        case QAudioFormat::Float:       drawCacheFromFloat(totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
+            break;
+        default:
+            vsLog::e("Waveform can't update cache because of unknown sample format of wave!");
         }
+
+        QPainter p(bgCache);
+
+        QPen pen(p.pen());
+        pen.setColor(Qt::green);
+        pen.setWidth(1);
+        p.setPen(pen);
+
+        p.drawLines(lines);
     }
 
     update();
@@ -48,7 +91,6 @@ void qtauWaveform::configure(int tempo, int noteWidth)
     {
         bpm = tempo;
         beatWidth = noteWidth;
-
         updateCache();
     }
 }
@@ -57,11 +99,12 @@ void qtauWaveform::setOffset(int off)
 {
     if (offset != off)
     {
+        // int oldOff = offset; use to possibly reuse an already cached data
         offset = off;
 
         bool cachedEnough = false;
 
-        //
+        // TODO: see if there's enough data in pixmap to draw waveform without updating
 
         if (!cachedEnough)
             updateCache();

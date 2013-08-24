@@ -553,6 +553,12 @@ void MainWindow::horzScrolled(int delta)
     noteEditor->setHOffset(delta);
     meter     ->setOffset (delta);
     drawZone  ->setOffset (delta);
+
+    if (vocalWavePanel->isVisible())
+        vocalWave->setOffset(delta);
+
+    if (musicWavePanel->isVisible())
+        musicWave->setOffset(delta);
 }
 
 void MainWindow::onEditorRMBScrolled(QPoint mouseDelta, QPoint origOffset)
@@ -764,6 +770,12 @@ void MainWindow::onZoomed(int z)
     piano     ->configure(ns);
     noteEditor->configure(ns);
     drawZone  ->configure(ns);
+
+    if (vocalWavePanel->isVisible())
+        vocalWave->configure(ns.tempo, ns.note.width());
+
+    if (musicWavePanel->isVisible())
+        musicWave->configure(ns.tempo, ns.note.width());
 
     // modify scrollbar sizes and position
     double hscr_val = (double)hscr->value() / hscr->maximum();
