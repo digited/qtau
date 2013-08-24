@@ -68,28 +68,30 @@ inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlid
 
 inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
-    int     srcI = 0;
-    quint8 *U8   = 0;
-    int     srcIinc = stereo ? 2 : 1;
+    int srcI = 0;
+    int srcIinc = stereo ? 2 : 1;
+
+    quint8 U8 = 0;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        U8 = reinterpret_cast<quint8*>(src[srcI]);
-        dst[i] = ((float)*U8 - 128.f) / 127.f;
+        U8 = *reinterpret_cast<const quint8*>(&src.data()[srcI]);
+        dst[i] = ((float)U8 - 128.f) / 127.f;
         srcI += srcIinc;
     }
 }
 
 inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
  {
-     int     srcI = 0;
-     qint16 *S16  = 0;
-     int     srcIinc = stereo ? 2*2 : 1*2;
+     int srcI = 0;
+     int srcIinc = stereo ? 2*2 : 1*2;
+
+     qint16 S16 = 0;
 
      for (int i = 0; i < dstLen; ++i)
      {
-         S16 = reinterpret_cast<qint16*>(&src[srcI]);
-         dst[i] = (float)*S16 / 32767.f;
+         S16 = *reinterpret_cast<const qint16*>(&src.data()[srcI]);
+         dst[i] = (float)S16 / 32767.f;
          srcI += srcIinc;
      }
  }
