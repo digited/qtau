@@ -75,26 +75,24 @@ inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo
     for (int i = 0; i < dstLen; ++i)
     {
         U8 = reinterpret_cast<quint8*>(src[srcI]);
-        dst[i] = ((float)*U8 - 128) / 256;
+        dst[i] = ((float)*U8 - 128.f) / 127.f;
         srcI += srcIinc;
     }
 }
 
 inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
-{
-    int     srcI = 0;
-    signed short int   S16;
-    unsigned short int U16;
-    int     srcIinc = stereo ? 2*2 : 1*2;
+ {
+     int     srcI = 0;
+     qint16 *S16  = 0;
+     int     srcIinc = stereo ? 2*2 : 1*2;
 
-    for (int i = 0; i < dstLen; ++i)
-    {
-        U16 = (unsigned short int)(unsigned char)src[srcI] + (unsigned short int)(unsigned char)src[srcI + 1] * 256;
-        S16 = U16;
-        dst[i] = ((float) S16) / 32767;
-        srcI += srcIinc;
-    }
-}
+     for (int i = 0; i < dstLen; ++i)
+     {
+         S16 = reinterpret_cast<qint16*>(&src[srcI]);
+         dst[i] = (float)*S16 / 32767.f;
+         srcI += srcIinc;
+     }
+ }
 
 inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
