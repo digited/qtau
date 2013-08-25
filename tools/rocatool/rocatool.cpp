@@ -1,5 +1,6 @@
 #include "rocatool.h"
 #include "ui_rocatool_window.h"
+#include "tools/CVEDSP/FreqDomain/Filter.h"
 
 #include "editor/Utils.h"
 #include "spectrum.h"
@@ -68,33 +69,33 @@ inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlid
 
 inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
-    int     srcI = 0;
-    quint8 *U8   = 0;
-    int     srcIinc = stereo ? 2 : 1;
+    int srcI = 0;
+    int srcIinc = stereo ? 2 : 1;
+
+    quint8 U8 = 0;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        U8 = reinterpret_cast<quint8*>(src[srcI]);
-        dst[i] = ((float)*U8 - 128) / 256;
+        U8 = *reinterpret_cast<const quint8*>(&src.data()[srcI]);
+        dst[i] = ((float)U8 - 128.f) / 127.f;
         srcI += srcIinc;
     }
 }
 
 inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
-{
-    int     srcI = 0;
-    signed short int   S16;
-    unsigned short int U16;
-    int     srcIinc = stereo ? 2*2 : 1*2;
+ {
+     int srcI = 0;
+     int srcIinc = stereo ? 2*2 : 1*2;
 
-    for (int i = 0; i < dstLen; ++i)
-    {
-        U16 = (unsigned short int)(unsigned char)src[srcI] + (unsigned short int)(unsigned char)src[srcI + 1] * 256;
-        S16 = U16;
-        dst[i] = ((float) S16) / 32767;
-        srcI += srcIinc;
-    }
-}
+     qint16 S16 = 0;
+
+     for (int i = 0; i < dstLen; ++i)
+     {
+         S16 = *reinterpret_cast<const qint16*>(&src.data()[srcI]);
+         dst[i] = (float)S16 / 32767.f;
+         srcI += srcIinc;
+     }
+ }
 
 inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
 {
@@ -307,7 +308,8 @@ void RocaTool::onLoadWav(QString fileName)
         delete audio; // transformed to floats, not needed anymore
 
         QAudioFormat fmt = wavBefore->getAudioFormat();
-        long totalSamples = wavBefore->size() / fmt.sampleSize();
+        long totalSamples = wavBefore->size() * 8 / fmt.sampleSize();
+        SetSampleRate(fmt.sampleRate());
         LoadWav((float*)wavBefore->buffer().data(), fmt.channelCount(), fmt.sampleRate(), totalSamples);
 
         // 10 seconds of floats with current sample rate (+1 for safety)

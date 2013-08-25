@@ -40,13 +40,12 @@ protected:
 
     QPixmap *bgCache;
     void updateCache();
+    void calcSetup(); // calculate how many samples can fit into geometry.width
 
     int bpm;
     int beatWidth; // in pixels
 
-    float pixelsPerSecond;
-    float samplesPerSecond;
-    float samplesPerPixel;
+    float framesVisible;
 };
 
 #endif // WAVEFORM_H
