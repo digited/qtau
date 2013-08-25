@@ -67,46 +67,38 @@ inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlid
 
 //---------------------------------------------
 
-inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void U8toFloat(const quint8* data, float *dst, int dstLen, bool stereo)
 {
     int srcI = 0;
     int srcIinc = stereo ? 2 : 1;
 
-    quint8 U8 = 0;
-
     for (int i = 0; i < dstLen; ++i)
     {
-        U8 = *reinterpret_cast<const quint8*>(&src.data()[srcI]);
-        dst[i] = ((float)U8 - 128.f) / 127.f;
+        dst[i] = ((float)data[srcI] - 128.f) / 127.f;
         srcI += srcIinc;
     }
 }
 
-inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void S16toFloat(const qint16 *data, float *dst, int dstLen, bool stereo)
  {
      int srcI = 0;
-     int srcIinc = stereo ? 2*2 : 1*2;
-
-     qint16 S16 = 0;
+     int srcIinc = stereo ? 2 : 1;
 
      for (int i = 0; i < dstLen; ++i)
      {
-         S16 = *reinterpret_cast<const qint16*>(&src.data()[srcI]);
-         dst[i] = (float)S16 / 32767.f;
+         dst[i] = (float)data[srcI] / 32767.f;
          srcI += srcIinc;
      }
  }
 
-inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void FloattoFloat(const float *data, float *dst, int dstLen, bool stereo)
 {
     int    srcI = 0;
-    float *F32  = 0;
-    int    srcIinc = stereo ? 2*4 : 1*4;
+    int    srcIinc = stereo ? 2 : 1*4;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        F32 = reinterpret_cast<float*>(src[srcI]);
-        dst[i] = *F32;
+        dst[i] = data[srcI];
         srcI += srcIinc;
     }
 }
@@ -116,27 +108,25 @@ inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
     QAudioFormat f = as.getAudioFormat();
 
     qint64 tenSeconds = f.sampleRate() * 10;
-    qint64 samples = qMin(as.size() * 8 / f.sampleSize(), tenSeconds); // NOTE: max 10 seconds
+    qint64 samples = qMin(as.size() / (f.sampleSize() / 8 * f.channelCount()), tenSeconds); // NOTE: max 10 seconds
 
-    QByteArray ba((samples + f.sampleRate()) * 4, '\0'); // +1 second for safety
+    QByteArray ba(samples * 4, '\0');
 
     switch (f.sampleType())
     {
-    case QAudioFormat::UnSignedInt: U8toFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::UnSignedInt: U8toFloat((quint8*)as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
-    case QAudioFormat::SignedInt:  S16toFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::SignedInt:  S16toFloat((qint16*)as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
-    case QAudioFormat::Float:    FloattoFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::Float:    FloattoFloat((float*) as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
     default:
         vsLog::e("Unknown audiosource sample format!");
     }
 
-    if (f.sampleType() != QAudioFormat::Float)
-    {
-        f.setSampleType(QAudioFormat::Float);
-        f.setSampleSize(32);
-    }
+    f.setSampleType(QAudioFormat::Float);
+    f.setSampleSize(32);
+    f.setChannelCount(1);
 
     QBuffer b(&ba);
 
@@ -298,8 +288,11 @@ void RocaTool::onLoadWav(QString fileName)
         needsSynthesis = true;
         setWindowTitle(fileName + " :: " + CONST_ROCATOOL_NAME);
 
+        player->stop(); // it may be playing audio that's gonna be deleted
+
         if (wavBefore)
             delete wavBefore;
+
         if (wavAfter)
             delete wavAfter;
 
@@ -378,7 +371,11 @@ void RocaTool::onPlay()
         }
 
         player->stop();
-        wavAfter->reset();
+
+        if (!wavBefore->isOpen())
+            wavBefore->open(QIODevice::ReadOnly);
+
+        wavBefore->reset();
         player->play(wavBefore);
     }
 }
