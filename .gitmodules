@@ -1,0 +1,3 @@
+[submodule "tools/CVEDSP"]
+	path = tools/CVEDSP
+	url = https://github.com/Sleepwalking/CVEDSP.git
