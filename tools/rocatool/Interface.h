@@ -1,6 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
-
+#include "tools/CVEDSP/FreqDomain/FECSOLA.h"
+/*
 typedef struct FECSOLAState
 {
     union {
@@ -24,14 +25,14 @@ typedef struct FECSOLAState
         };
     };
 } FECSOLAState;
-
+*/
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void LoadWav(float* wave, char channels, int sampleRate, unsigned long totalSamples);
-void UpdateSpectrum1(float* DestArray, float* Src, FECSOLAState *parameters); // 512 floats
-void UpdateSpectrum2(float* DestArray, FECSOLAState *parameters); // 512 floats
+void UpdateSpectrum1(float* DestArray, float* Src); // 512 floats
+void UpdateSpectrum2(float* DestArray, FECSOLAState paramsBefore, FECSOLAState paramsAfter); // 512 floats
 void Synthesis(float* DestWave, int sampleRate, FECSOLAState paramsBefore, FECSOLAState paramsAfter); // dest wave is 10 seconds
 
 #ifdef __cplusplus

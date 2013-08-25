@@ -81,7 +81,7 @@ SOURCES = \
     ../../editor/audio/CodecBase.cpp \
     ../../editor/audio/Codec.cpp \
     ../../editor/Utils.cpp \
-    Interface.c
+    Interface.cpp
 
 QMAKE_CXXFLAGS += -Wunused-parameter
 

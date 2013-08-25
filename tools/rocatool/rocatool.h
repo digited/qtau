@@ -32,10 +32,16 @@ signals:
 public slots:
     void onLoadWav(QString fileName);
 
+    void onbF1(int);
+    void onbF2(int);
+    void onbF3(int);
     void onaF1(int);
     void onaF2(int);
     void onaF3(int);
 
+    void onbS1(int);
+    void onbS2(int);
+    void onbS3(int);
     void onaS1(int);
     void onaS2(int);
     void onaS3(int);
@@ -90,6 +96,8 @@ protected:
     //-------------------------------
 
     qtauAudioSource* loadAudio(const QString &fileName);
+
+    void updateSpectrum1();
     void updateSpectrum2();
 
     bool needsSynthesis;

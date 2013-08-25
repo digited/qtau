@@ -67,46 +67,38 @@ inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlid
 
 //---------------------------------------------
 
-inline void U8toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void U8toFloat(const quint8* data, float *dst, int dstLen, bool stereo)
 {
     int srcI = 0;
     int srcIinc = stereo ? 2 : 1;
 
-    quint8 U8 = 0;
-
     for (int i = 0; i < dstLen; ++i)
     {
-        U8 = *reinterpret_cast<const quint8*>(&src.data()[srcI]);
-        dst[i] = ((float)U8 - 128.f) / 127.f;
+        dst[i] = ((float)data[srcI] - 128.f) / 127.f;
         srcI += srcIinc;
     }
 }
 
-inline void S16toFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void S16toFloat(const qint16 *data, float *dst, int dstLen, bool stereo)
  {
      int srcI = 0;
-     int srcIinc = stereo ? 2*2 : 1*2;
-
-     qint16 S16 = 0;
+     int srcIinc = stereo ? 2 : 1;
 
      for (int i = 0; i < dstLen; ++i)
      {
-         S16 = *reinterpret_cast<const qint16*>(&src.data()[srcI]);
-         dst[i] = (float)S16 / 32767.f;
+         dst[i] = (float)data[srcI] / 32767.f;
          srcI += srcIinc;
      }
  }
 
-inline void FloattoFloat(const QByteArray &src, float *dst, int dstLen, bool stereo)
+inline void FloattoFloat(const float *data, float *dst, int dstLen, bool stereo)
 {
     int    srcI = 0;
-    float *F32  = 0;
-    int    srcIinc = stereo ? 2*4 : 1*4;
+    int    srcIinc = stereo ? 2 : 1*4;
 
     for (int i = 0; i < dstLen; ++i)
     {
-        F32 = reinterpret_cast<float*>(src[srcI]);
-        dst[i] = *F32;
+        dst[i] = data[srcI];
         srcI += srcIinc;
     }
 }
@@ -116,27 +108,25 @@ inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
     QAudioFormat f = as.getAudioFormat();
 
     qint64 tenSeconds = f.sampleRate() * 10;
-    qint64 samples = qMin(as.size() * 8 / f.sampleSize(), tenSeconds); // NOTE: max 10 seconds
+    qint64 samples = qMin(as.size() / (f.sampleSize() / 8 * f.channelCount()), tenSeconds); // NOTE: max 10 seconds
 
-    QByteArray ba((samples + f.sampleRate()) * 4, '\0'); // +1 second for safety
+    QByteArray ba(samples * 4, '\0');
 
     switch (f.sampleType())
     {
-    case QAudioFormat::UnSignedInt: U8toFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::UnSignedInt: U8toFloat((quint8*)as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
-    case QAudioFormat::SignedInt:  S16toFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::SignedInt:  S16toFloat((qint16*)as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
-    case QAudioFormat::Float:    FloattoFloat(as.buffer(), (float*)ba.data(), samples, f.channelCount() > 1);
+    case QAudioFormat::Float:    FloattoFloat((float*) as.buffer().data(), (float*)ba.data(), samples, f.channelCount() > 1);
         break;
     default:
         vsLog::e("Unknown audiosource sample format!");
     }
 
-    if (f.sampleType() != QAudioFormat::Float)
-    {
-        f.setSampleType(QAudioFormat::Float);
-        f.setSampleSize(32);
-    }
+    f.setSampleType(QAudioFormat::Float);
+    f.setSampleSize(32);
+    f.setChannelCount(1);
 
     QBuffer b(&ba);
 
@@ -183,26 +173,33 @@ RocaTool::RocaTool(QWidget *parent) :
     aS2 = makeStrengthSlider(this);
     aS3 = makeStrengthSlider(this);
 
-    bF1->setEnabled(false);
-    bF2->setEnabled(false);
-    bF3->setEnabled(false);
-    bS1->setEnabled(false);
-    bS2->setEnabled(false);
-    bS3->setEnabled(false);
+    aF1->setValue(1000);
+    bF1->setValue(1000);
+    aF2->setValue(1500);
+    bF2->setValue(1500);
+    aF3->setValue(4000);
+    bF3->setValue(4000);
 
-    bF1val = makeRightLabel("0", this);
-    bF2val = makeRightLabel("0", this);
-    bF3val = makeRightLabel("0", this);
-    aF1val = makeRightLabel("0", this);
-    aF2val = makeRightLabel("0", this);
-    aF3val = makeRightLabel("0", this);
+    aS1->setValue(10);
+    bS1->setValue(10);
+    aS2->setValue(10);
+    bS2->setValue(10);
+    aS3->setValue(10);
+    bS3->setValue(10);
 
-    bS1val = makeRightLabel("0", this);
-    bS2val = makeRightLabel("0", this);
-    bS3val = makeRightLabel("0", this);
-    aS1val = makeRightLabel("0", this);
-    aS2val = makeRightLabel("0", this);
-    aS3val = makeRightLabel("0", this);
+    bF1val = makeRightLabel("1000", this);
+    bF2val = makeRightLabel("1500", this);
+    bF3val = makeRightLabel("4000", this);
+    aF1val = makeRightLabel("1000", this);
+    aF2val = makeRightLabel("1500", this);
+    aF3val = makeRightLabel("4000", this);
+
+    bS1val = makeRightLabel("1", this);
+    bS2val = makeRightLabel("1", this);
+    bS3val = makeRightLabel("1", this);
+    aS1val = makeRightLabel("1", this);
+    aS2val = makeRightLabel("1", this);
+    aS3val = makeRightLabel("1", this);
 
     QLabel *befLbl = new QLabel("Before");
     QLabel *aftLbl = new QLabel("After");
@@ -233,9 +230,17 @@ RocaTool::RocaTool(QWidget *parent) :
     connect(ui->actionQuit, SIGNAL(triggered()), SLOT(close()));
     connect(ui->actionPlay, SIGNAL(triggered()), SLOT(onPlay()));
 
+    connect(bF1, SIGNAL(valueChanged(int)), SLOT(onbF1(int)));
+    connect(bF2, SIGNAL(valueChanged(int)), SLOT(onbF2(int)));
+    connect(bF3, SIGNAL(valueChanged(int)), SLOT(onbF3(int)));
+
     connect(aF1, SIGNAL(valueChanged(int)), SLOT(onaF1(int)));
     connect(aF2, SIGNAL(valueChanged(int)), SLOT(onaF2(int)));
     connect(aF3, SIGNAL(valueChanged(int)), SLOT(onaF3(int)));
+
+    connect(bS1, SIGNAL(valueChanged(int)), SLOT(onbS1(int)));
+    connect(bS2, SIGNAL(valueChanged(int)), SLOT(onbS2(int)));
+    connect(bS3, SIGNAL(valueChanged(int)), SLOT(onbS3(int)));
 
     connect(aS1, SIGNAL(valueChanged(int)), SLOT(onaS1(int)));
     connect(aS2, SIGNAL(valueChanged(int)), SLOT(onaS2(int)));
@@ -298,8 +303,11 @@ void RocaTool::onLoadWav(QString fileName)
         needsSynthesis = true;
         setWindowTitle(fileName + " :: " + CONST_ROCATOOL_NAME);
 
+        player->stop(); // it may be playing audio that's gonna be deleted
+
         if (wavBefore)
             delete wavBefore;
+
         if (wavAfter)
             delete wavAfter;
 
@@ -314,23 +322,9 @@ void RocaTool::onLoadWav(QString fileName)
 
         // 10 seconds of floats with current sample rate (+1 for safety)
         spectrumDataBefore.resize(SPECTRUM_FLOATS * 4);
-        FECSOLAState stateBefore;
-        UpdateSpectrum1((float*)spectrumDataBefore.data(), (float*)wavBefore -> buffer().data(), &stateBefore);
+
+        UpdateSpectrum1((float*)spectrumDataBefore.data(), (float*)wavBefore -> buffer().data());
         spectrumDataAfter = spectrumDataBefore;
-
-        bF1->setValue(stateBefore.F1);
-        bF2->setValue(stateBefore.F2);
-        bF3->setValue(stateBefore.F3);
-        aF1->setValue(stateBefore.F1);
-        aF2->setValue(stateBefore.F2);
-        aF3->setValue(stateBefore.F3);
-
-        bS1->setValue(stateBefore.S1);
-        bS2->setValue(stateBefore.S2);
-        bS3->setValue(stateBefore.S3);
-        aS1->setValue(stateBefore.S1);
-        aS2->setValue(stateBefore.S2);
-        aS3->setValue(stateBefore.S3);
 
         spectrumBefore->setSpectrumData((float*)spectrumDataBefore.data(), SPECTRUM_FLOATS);
         spectrumAfter ->setSpectrumData((float*)spectrumDataBefore.data(), SPECTRUM_FLOATS);
@@ -339,10 +333,20 @@ void RocaTool::onLoadWav(QString fileName)
 
 
 //----- ui callbacks ------------
+// before-synth Formants
+void RocaTool::onbF1(int val) { bF1val->setText(QString("%1").arg(val)); updateSpectrum2(); }
+void RocaTool::onbF2(int val) { bF2val->setText(QString("%1").arg(val)); updateSpectrum2(); }
+void RocaTool::onbF3(int val) { bF3val->setText(QString("%1").arg(val)); updateSpectrum2(); }
+
 // after-synth Formants
 void RocaTool::onaF1(int val) { aF1val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF2(int val) { aF2val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF3(int val) { aF3val->setText(QString("%1").arg(val)); updateSpectrum2(); }
+
+// before-synth Strength
+void RocaTool::onbS1(int val) { bS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
+void RocaTool::onbS2(int val) { bS2val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
+void RocaTool::onbS3(int val) { bS3val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
 
 // after-synth Strength
 void RocaTool::onaS1(int val) { aS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
@@ -354,7 +358,7 @@ void RocaTool::onPlay()
 {
     if (wavBefore)
     {
-        if (!needsSynthesis)
+        if (needsSynthesis)
         {
             FECSOLAState stB;
             stB.F1 = bF1->value();
@@ -374,12 +378,15 @@ void RocaTool::onPlay()
             stA.S2 = aS2->value();
             stA.S3 = aS3->value();
             Synthesis((float*)wavAfter->buffer().data(), wavAfter->getAudioFormat().sampleRate(), stB, stA);
-            needsSynthesis = false;
         }
 
         player->stop();
+
+        if (!wavAfter->isOpen())
+            wavAfter->open(QIODevice::ReadOnly);
+
         wavAfter->reset();
-        player->play(wavBefore);
+        player->play(wavAfter);
     }
 }
 
@@ -411,6 +418,15 @@ void RocaTool::dropEvent(QDropEvent *e)
         onLoadWav(fi.absoluteFilePath());
 }
 
+void RocaTool::updateSpectrum1()
+{
+    if (wavBefore) // check because its data is passed to UpdateSpectrum1
+    {
+        UpdateSpectrum1((float*)spectrumDataBefore.data(), (float*)wavBefore->buffer().data());
+        spectrumBefore->setSpectrumData((float*)spectrumDataBefore.data(), SPECTRUM_FLOATS);
+    }
+}
+
 void RocaTool::updateSpectrum2()
 {
     FECSOLAState stA;
@@ -422,6 +438,15 @@ void RocaTool::updateSpectrum2()
     stA.S2 = aS2->value();
     stA.S3 = aS3->value();
 
-    UpdateSpectrum2((float*)spectrumDataAfter.data(), &stA);
+    FECSOLAState stB;
+    stB.F1 = bF1->value();
+    stB.F2 = bF2->value();
+    stB.F3 = bF3->value();
+
+    stB.S1 = bS1->value();
+    stB.S2 = bS2->value();
+    stB.S3 = bS3->value();
+
+    UpdateSpectrum2((float*)spectrumDataAfter.data(), stB, stA);
     spectrumAfter->setSpectrumData((float*)spectrumDataAfter.data(), SPECTRUM_FLOATS);
 }
