@@ -92,13 +92,9 @@ RESOURCES += \
     res.qrc
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../release/ -lCVEDSP
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../debug/ -lCVEDSP
-else:unix: LIBS += -L$$PWD/../ -lCVEDSP
+unix:!macx: LIBS += -L$$PWD/../CVEDSP/ -lCVEDSP
 
-INCLUDEPATH += $$PWD/../
-DEPENDPATH += $$PWD/../
+INCLUDEPATH += $$PWD/../CVEDSP
+DEPENDPATH += $$PWD/../CVEDSP
 
-win32:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../release/CVEDSP.lib
-else:win32:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../debug/CVEDSP.lib
-else:unix: PRE_TARGETDEPS += $$PWD/../libCVEDSP.a
+unix:!macx: PRE_TARGETDEPS += $$PWD/../CVEDSP/libCVEDSP.a
