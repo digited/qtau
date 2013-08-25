@@ -31,7 +31,7 @@
 
 const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
 
-const int CONST_MIN_PIANO_WIDTH     = 84;
+const int CONST_MIN_PIANO_WIDTH     = 110;
 const int CONST_MIN_PIANO_HEIGHT    = 40;
 const int CONST_METER_HEIGHT        = 20;
 const int CONST_WAVEFORM_MIN_HEIGHT = 50;

@@ -128,6 +128,17 @@ void qtauWaveform::updateCache()
         p.setPen(pen);
 
         p.drawLines(lines);
+
+        QLinearGradient lg(0,0,0,height());
+
+        lg.setColorAt(0.0, Qt::white);
+        lg.setColorAt(0.5, Qt::transparent);
+        lg.setColorAt(1.0, Qt::white);
+
+
+        p.setPen(Qt::NoPen);
+        p.setBrush(QBrush(lg));
+        p.drawRect(bgCache->rect());
     }
 
     update();
