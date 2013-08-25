@@ -1,6 +1,8 @@
 #include "editor/ui/waveform.h"
 #include "editor/audio/Source.h"
 
+#include <qmath.h>
+
 #include <qevent.h>
 #include <QPainter>
 
@@ -17,32 +19,60 @@ qtauWaveform::~qtauWaveform()
         delete bgCache;
 }
 
-inline void drawCacheFromU8(int totalSamples, float framesVisible, int channelCount,
-                            const QByteArray &data, QVector<QLine> &lines)
+inline void cycleU8(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const quint8* data)
 {
-    //
+    for (int b = smpSt; b < smpEnd; ++b)
+    {
+        int iVal = (int)data[b] - 128;
+        float val = (float)iVal / 127.f;
+
+        hiVal = qMax(hiVal, val);
+        loVal = qMin(loVal, val);
+    }
 }
 
-inline void drawCacheFromS16(int totalSamples, float framesVisible, int channelCount,
-                             const QByteArray &data, QVector<QLine> &lines)
+inline void cycleS16(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const qint16 *data)
 {
-    //
+    int sampleSize = 2;
+    int byteSt  = smpSt  * sampleSize;
+    int byteEnd = smpEnd * sampleSize;
+
+    for (int b = byteSt; b < byteEnd; b += sampleSize)
+    {
+        float val = (float)data[b] / 32767.f;
+
+        hiVal = qMax(hiVal, val);
+        loVal = qMin(loVal, val);
+    }
 }
 
-inline void drawCacheFromFloat(int totalSamples, float framesVisible, int channelCount,
-                               const QByteArray &data, QVector<QLine> &lines)
+inline void cycleF32(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const float *data)
 {
-    //
+    int sampleSize = 4;
+    int byteSt  = smpSt  * sampleSize;
+    int byteEnd = smpEnd * sampleSize;
+
+    for (int b = byteSt; b < byteEnd; b += sampleSize)
+    {
+        float val = data[b];
+
+        hiVal = qMax(hiVal, val);
+        loVal = qMin(loVal, val);
+    }
 }
 
 void qtauWaveform::updateCache()
 {
-    // draw waveform to cache
-    if (bgCache->width() < this->width()/* * 2*/)
+    int requiredCacheWidth = width()/* * 2*/;
+
+    if (bgCache && (bgCache->width() < requiredCacheWidth || bgCache->height() < height()))
     {
         delete bgCache;
-        bgCache = new QPixmap(this->rect().height(), this->width()/* * 2*/);
+        bgCache = 0;
     }
+
+    if (!bgCache)
+        bgCache = new QPixmap(requiredCacheWidth, this->rect().height());
 
     bgCache->fill(Qt::transparent);
 
@@ -58,18 +88,44 @@ void qtauWaveform::updateCache()
 
         int totalSamples = wave->size() * 8 / fmt.sampleSize();
 
-        QVector<QLine> lines;
+        QVector<QLineF> lines;
 
-        switch (fmt.sampleType())
+        int smpSt = 0;
+        int smpEnd = 0;
+
+        bool noMoreSamples = false;
+        const QAudioFormat::SampleType sampType = fmt.sampleType();
+        float halfHeight = height() / 2;
+
+        for (int i = 0; i < width(); ++i) // for each visible pixel of width
         {
-        case QAudioFormat::UnSignedInt: drawCacheFromU8   (totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
-            break;
-        case QAudioFormat::SignedInt:   drawCacheFromS16  (totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
-            break;
-        case QAudioFormat::Float:       drawCacheFromFloat(totalSamples, framesVisible, fmt.channelCount(), wave->data(), lines);
-            break;
-        default:
-            vsLog::e("Waveform can't update cache because of unknown sample format of wave!");
+            smpEnd = (float)(i+1) / fW * framesVisible * fmt.channelCount();
+
+            if (smpEnd >= totalSamples)
+            {
+                noMoreSamples = true;
+                smpEnd = totalSamples - 1;
+            }
+
+            float hiVal = -10.f;
+            float loVal =  10.f;
+
+            switch (sampType) // hoping that compiler will optimize const var + inline
+            {
+            case QAudioFormat::UnSignedInt: cycleU8 (smpSt, smpEnd, hiVal, loVal, (quint8*)wave->data().data());
+                break;
+            case QAudioFormat::SignedInt:   cycleS16(smpSt, smpEnd, hiVal, loVal, (qint16*)wave->data().data());
+                break;
+            case QAudioFormat::Float:       cycleF32(smpSt, smpEnd, hiVal, loVal, (float*) wave->data().data());
+                break;
+            default:
+                vsLog::e("Waveform can't update cache because of unknown sample format of wave!");
+            }
+
+            lines.append(QLineF(i, halfHeight + hiVal * halfHeight, i, halfHeight + loVal * halfHeight));
+
+            if (noMoreSamples) break;
+            else               smpSt = smpEnd;
         }
 
         QPainter p(bgCache);
@@ -122,10 +178,10 @@ void qtauWaveform::setAudio(qtauAudioSource *pcm)
 
 //---------------------------------------------------
 
-void qtauWaveform::paintEvent(QPaintEvent  *e)
+void qtauWaveform::paintEvent(QPaintEvent  *)
 {
     QPainter p(this);
-    p.fillRect(e->rect(), QColor(Qt::red));
+    p.drawPixmap(0, 0, *bgCache);
 }
 
 void qtauWaveform::resizeEvent(QResizeEvent *)
