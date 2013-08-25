@@ -173,13 +173,6 @@ RocaTool::RocaTool(QWidget *parent) :
     aS2 = makeStrengthSlider(this);
     aS3 = makeStrengthSlider(this);
 
-    bF1->setEnabled(false);
-    bF2->setEnabled(false);
-    bF3->setEnabled(false);
-    bS1->setEnabled(false);
-    bS2->setEnabled(false);
-    bS3->setEnabled(false);
-
     bF1val = makeRightLabel("0", this);
     bF2val = makeRightLabel("0", this);
     bF3val = makeRightLabel("0", this);
@@ -223,9 +216,17 @@ RocaTool::RocaTool(QWidget *parent) :
     connect(ui->actionQuit, SIGNAL(triggered()), SLOT(close()));
     connect(ui->actionPlay, SIGNAL(triggered()), SLOT(onPlay()));
 
+    connect(bF1, SIGNAL(valueChanged(int)), SLOT(onbF1(int)));
+    connect(bF2, SIGNAL(valueChanged(int)), SLOT(onbF2(int)));
+    connect(bF3, SIGNAL(valueChanged(int)), SLOT(onbF3(int)));
+
     connect(aF1, SIGNAL(valueChanged(int)), SLOT(onaF1(int)));
     connect(aF2, SIGNAL(valueChanged(int)), SLOT(onaF2(int)));
     connect(aF3, SIGNAL(valueChanged(int)), SLOT(onaF3(int)));
+
+    connect(bS1, SIGNAL(valueChanged(int)), SLOT(onbS1(int)));
+    connect(bS2, SIGNAL(valueChanged(int)), SLOT(onbS2(int)));
+    connect(bS3, SIGNAL(valueChanged(int)), SLOT(onbS3(int)));
 
     connect(aS1, SIGNAL(valueChanged(int)), SLOT(onaS1(int)));
     connect(aS2, SIGNAL(valueChanged(int)), SLOT(onaS2(int)));
@@ -332,10 +333,20 @@ void RocaTool::onLoadWav(QString fileName)
 
 
 //----- ui callbacks ------------
+// before-synth Formants
+void RocaTool::onbF1(int val) { bF1val->setText(QString("%1").arg(val)); updateSpectrum1(); }
+void RocaTool::onbF2(int val) { bF2val->setText(QString("%1").arg(val)); updateSpectrum1(); }
+void RocaTool::onbF3(int val) { bF3val->setText(QString("%1").arg(val)); updateSpectrum1(); }
+
 // after-synth Formants
 void RocaTool::onaF1(int val) { aF1val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF2(int val) { aF2val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF3(int val) { aF3val->setText(QString("%1").arg(val)); updateSpectrum2(); }
+
+// before-synth Strength
+void RocaTool::onbS1(int val) { bS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum1(); }
+void RocaTool::onbS2(int val) { bS2val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum1(); }
+void RocaTool::onbS3(int val) { bS3val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum1(); }
 
 // after-synth Strength
 void RocaTool::onaS1(int val) { aS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
@@ -406,6 +417,24 @@ void RocaTool::dropEvent(QDropEvent *e)
 
     if (fi.exists() && !fi.isDir() && fi.suffix() == "wav") // accepting only first one, if it's a ".wav"
         onLoadWav(fi.absoluteFilePath());
+}
+
+void RocaTool::updateSpectrum1()
+{
+    if (wavBefore) // check because its data is passed to UpdateSpectrum1
+    {
+        FECSOLAState stB;
+        stB.F1 = bF1->value();
+        stB.F2 = bF2->value();
+        stB.F3 = bF3->value();
+
+        stB.S1 = bS1->value();
+        stB.S2 = bS2->value();
+        stB.S3 = bS3->value();
+
+        UpdateSpectrum1((float*)spectrumDataBefore.data(), (float*)wavBefore->buffer().data(), &stB);
+        spectrumBefore->setSpectrumData((float*)spectrumDataBefore.data(), SPECTRUM_FLOATS);
+    }
 }
 
 void RocaTool::updateSpectrum2()
