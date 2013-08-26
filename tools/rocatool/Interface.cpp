@@ -33,24 +33,26 @@ void LoadWav(float* wave, char channels, int sampleRate, unsigned long totalSamp
         Length = totalSamples - SampleRate;
         SetSampleRate(sampleRate);
         BF = GetBaseFrequencyFromWave(wave + Length / 2, 80, 1500, 13);
-        qDebug() << QString("Length: ") << Length;
-        qDebug() << QString("Fundamental Freq: ") << BF;
+        qDebug() << "Length:"           << Length;
+        qDebug() << "Fundamental Freq:" << BF;
 
         ExtractPulsesByBaseFrequency(Pulses, &PD, wave, BF, Length);
-        qDebug() << PD.Amount << QString(" pulses extracted.");
-        qDebug() << QString("VOT: ") << (float)Pulses[PD.VoiceOnsetIndex] / SampleRate;
-        if(FirstRun)
+        qDebug() << PD.Amount << "pulses extracted.";
+        qDebug() << "VOT:" << (float)Pulses[PD.VoiceOnsetIndex] / SampleRate;
+
+        if (FirstRun)
         {
-            for(i = 0;i < 5000; i ++)
+            for (i = 0;i < 5000; ++i)
                 PSOLAFrame_Ctor(&PFrames[i], 1024);
-            for(i = 0;i < 5000; i ++)
+
+            for (i = 0;i < 5000; ++i)
                 PSOLAFrame_Ctor(&ModifiedPFrames[i], 1024);
+
             FirstRun = 0;
         }
-        for(i = 0;i < PD.Amount;i ++)
-        {
+
+        for (i = 0; i < PD.Amount; ++i)
             PSOLAFrame_SecureGet(&PFrames[i], wave, Pulses[i] + 1024, Pulses[i]);
-        }
     }
 }
 

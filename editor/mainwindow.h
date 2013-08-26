@@ -78,10 +78,9 @@ public slots:
 
     void onQuit();
 
-    void onPlay();
+    void onPlay(qint64 offset);
+    void onPause();
     void onStop();
-    void onPlayReset();
-    void onReplay();
 
     void onUndo();
     void onRedo();

@@ -47,6 +47,8 @@ public slots:
     void onaS3(int);
 
     void onPlay();
+    void onVolumeSet(int);
+    void onPlaybackEnded();
 
 protected:
     void dragEnterEvent(QDragEnterEvent *);
@@ -60,6 +62,7 @@ protected:
     qtauAudioSource *wavAfter;
 
     qtmmPlayer *player;
+    QSlider    *soundLevel;
 
     //-------- slider groups ----------
     QSlider *bF1;
@@ -101,6 +104,7 @@ protected:
     void updateSpectrum2();
 
     bool needsSynthesis;
+    bool playing;
 
     QByteArray spectrumDataBefore;
     QByteArray spectrumDataAfter;

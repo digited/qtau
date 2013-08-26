@@ -21,8 +21,11 @@ public:
     void stop();
     void reset() { stop(); play(); }
 
+    void setVolume(int level); // 0..100
+
 signals:
     void playbackEnded();
+    void tick();
 
 public slots:
     void onQtmmStateChanged(QAudio::State);
@@ -30,6 +33,7 @@ public slots:
 
 protected:
     QAudioOutput *audioOutput;
+    int volume;
 
 };
 

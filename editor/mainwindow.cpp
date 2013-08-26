@@ -113,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QScrollBar *dummySB = new QScrollBar(this);
     dummySB->setOrientation(Qt::Vertical);
     dummySB->setRange(0,0);
+    dummySB->setEnabled(false);
 
     QFrame *vocalControls = new QFrame(this);
     vocalControls->setContentsMargins(0,0,0,0);
@@ -141,6 +142,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //---------
 
+    QScrollBar *dummySB2 = new QScrollBar(this);
+    dummySB2->setOrientation(Qt::Vertical);
+    dummySB2->setRange(0,0);
+    dummySB2->setEnabled(false);
+
     QFrame *musicControls = new QFrame(this);
     musicControls->setContentsMargins(0,0,0,0);
     musicControls->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_WAVEFORM_MIN_HEIGHT);
@@ -157,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent) :
     musicWaveL->setSpacing(0);
     musicWaveL->addWidget(musicControls);
     musicWaveL->addWidget(musicWave);
-    musicWaveL->addWidget(dummySB);
+    musicWaveL->addWidget(dummySB2);
 
     musicWavePanel = new QWidget(this);
     musicWavePanel->setContentsMargins(0,0,0,0);
@@ -201,12 +207,17 @@ MainWindow::MainWindow(QWidget *parent) :
     drawZone->setMinimumHeight(CONST_DRAWZONE_MIN_HEIGHT);
     drawZone->setContentsMargins(0,0,0,0);
 
+    QScrollBar *dummySB3 = new QScrollBar(this);
+    dummySB3->setOrientation(Qt::Vertical);
+    dummySB3->setRange(0,0);
+    dummySB3->setEnabled(false);
+
     QHBoxLayout *singParamsL = new QHBoxLayout();
     singParamsL->setContentsMargins(0,0,0,0);
     singParamsL->setSpacing(0);
     singParamsL->addWidget(dynBtnPanel);
     singParamsL->addWidget(drawZone);
-    singParamsL->addWidget(dummySB);
+    singParamsL->addWidget(dummySB3);
 
     drawZonePanel = new QWidget(this);
     drawZonePanel->setContentsMargins(0,0,0,0);
@@ -414,6 +425,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(drawZone,   SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
     connect(noteEditor, SIGNAL(vscrolled(int)),     SLOT(notesVScrolled(int)));
     connect(noteEditor, SIGNAL(hscrolled(int)),     SLOT(notesHScrolled(int)));
+    connect(vocalWave,  SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
+    connect(musicWave,  SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
     connect(vscr,       SIGNAL(valueChanged(int)),  SLOT(vertScrolled(int)));
     connect(hscr,       SIGNAL(valueChanged(int)),  SLOT(horzScrolled(int)));
 
@@ -424,15 +437,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(meter,      SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
     connect(noteEditor, SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
     connect(drawZone,   SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
+    connect(vocalWave,  SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
+    connect(musicWave,  SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
 
     connect(ui->actionQuit,    SIGNAL(triggered()), SLOT(onQuit()));
     connect(ui->actionOpen,    SIGNAL(triggered()), SLOT(onOpenUST()));
     connect(ui->actionSave_as, SIGNAL(triggered()), SLOT(onSaveUST()));
-
-    connect(ui->actionPlay,    SIGNAL(triggered()), SLOT(onPlay ()));
-    connect(ui->actionStop,    SIGNAL(triggered()), SLOT(onStop ()));
-    connect(ui->actionBack,    SIGNAL(triggered()), SLOT(onPlayReset()));
-    connect(ui->actionRepeat,  SIGNAL(triggered()), SLOT(onReplay()));
 
     connect(ui->actionUndo,    SIGNAL(triggered()), SLOT(onUndo()));
     connect(ui->actionRedo,    SIGNAL(triggered()), SLOT(onRedo()));
@@ -592,24 +602,26 @@ void MainWindow::onNoteEditorWidthChanged(int newWidth)
     hscr->setPageStep(noteEditor->geometry().width());
 }
 
-void MainWindow::onPlay()
+void MainWindow::onPlay(qint64 offset)
 {
-    qDebug() << "Play!";
+    offset += 0;
+    ui->actionPlay->setIcon(QIcon(":/images/b_pause.png"));
+    ui->actionPlay->setText(tr("Pause"));
+    playState = Playing;
+}
+
+void MainWindow::onPause()
+{
+    ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+    ui->actionPlay->setText(tr("Play"));
+    playState = Paused;
 }
 
 void MainWindow::onStop()
 {
-    qDebug() << "Stop.";
-}
-
-void MainWindow::onPlayReset()
-{
-    qDebug() << "Play from start <<<";
-}
-
-void MainWindow::onReplay()
-{
-    qDebug() << "Repeat until forever!";
+    ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+    ui->actionPlay->setText(tr("Play"));
+    playState = Stopped;
 }
 
 void MainWindow::onUndo()

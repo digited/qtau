@@ -133,13 +133,27 @@ inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
     return new qtauAudioSource(b, f);
 }
 
+inline QWidget* setupSpectrum(Spectrum *sp, QWidget *parent = 0)
+{
+    QWidget *result = new QWidget(parent);
+    result->setContentsMargins(5, 5, 5, 5);
+    result->setMinimumSize(200, 200);
+    result->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    QVBoxLayout *vbl = new QVBoxLayout();
+    vbl->addWidget(sp);
+    result->setLayout(vbl);
+
+    return result;
+}
+
 
 //========================================================================
 //========================================================================
 
 
 RocaTool::RocaTool(QWidget *parent) :
-    QMainWindow(parent), wavBefore(0), wavAfter(0), needsSynthesis(false), ui(new Ui::RocaWindow)
+    QMainWindow(parent), wavBefore(0), wavAfter(0), needsSynthesis(false), playing(false), ui(new Ui::RocaWindow)
 {
     ui->setupUi(this);
     setWindowTitle(CONST_ROCATOOL_NAME);
@@ -152,12 +166,8 @@ RocaTool::RocaTool(QWidget *parent) :
 
     spectrumBefore = new Spectrum(this);
     spectrumAfter  = new Spectrum(this);
-
-    spectrumBefore->setMinimumSize(200, 200);
-    spectrumAfter ->setMinimumSize(200, 200);
-
-    spectrumBefore->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    spectrumAfter ->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QWidget *spectrumBeforePanel = setupSpectrum(spectrumBefore, this);
+    QWidget *spectrumAfterPanel  = setupSpectrum(spectrumAfter,  this);
 
     bF1 = makeFreqSlider(this);
     bF2 = makeFreqSlider(this);
@@ -217,18 +227,34 @@ RocaTool::RocaTool(QWidget *parent) :
     makeRowOfSliders(5, gl, "S2", bS2, bS2val, aS2, aS2val);
     makeRowOfSliders(6, gl, "S3", bS3, bS3val, aS3, aS3val);
 
-    gl->addWidget(spectrumBefore, 7, 0, 1, 3);
-    gl->addWidget(spectrumAfter,  7, 3, 1, 3);
+    gl->addWidget(spectrumBeforePanel, 7, 0, 1, 3);
+    gl->addWidget(spectrumAfterPanel,  7, 3, 1, 3);
+
+    soundLevel = new QSlider(Qt::Horizontal, this);
+    soundLevel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    soundLevel->setMaximum(100);
+    soundLevel->setValue(50);
+    player->setVolume(50);
+
+    QLabel *volumePic = new QLabel(this);
+    volumePic->setPixmap(QPixmap(":/images/speaker.png"));
 
     QToolBar *tb = new QToolBar(this);
     tb->addAction(ui->actionPlay);
+    tb->addWidget(soundLevel);
+    tb->addWidget(volumePic);
     tb->setFloatable(false);
     addToolBar(tb);
+
+    ui->actionPlay->setEnabled(false);
     //--------------------------------------------
 
     // --------- binding widgets -----------------
     connect(ui->actionQuit, SIGNAL(triggered()), SLOT(close()));
     connect(ui->actionPlay, SIGNAL(triggered()), SLOT(onPlay()));
+
+    connect(soundLevel, SIGNAL(valueChanged(int)), SLOT(onVolumeSet(int)));
+    connect(player, SIGNAL(playbackEnded()), SLOT(onPlaybackEnded()));
 
     connect(bF1, SIGNAL(valueChanged(int)), SLOT(onbF1(int)));
     connect(bF2, SIGNAL(valueChanged(int)), SLOT(onbF2(int)));
@@ -300,6 +326,7 @@ void RocaTool::onLoadWav(QString fileName)
 
     if (audio)
     {
+        ui->actionPlay->setEnabled(true);
         needsSynthesis = true;
         setWindowTitle(fileName + " :: " + CONST_ROCATOOL_NAME);
 
@@ -358,6 +385,9 @@ void RocaTool::onPlay()
 {
     if (wavBefore)
     {
+        if (playing)
+            player->stop();
+
         if (needsSynthesis)
         {
             FECSOLAState stB;
@@ -380,13 +410,15 @@ void RocaTool::onPlay()
             Synthesis((float*)wavAfter->buffer().data(), wavAfter->getAudioFormat().sampleRate(), stB, stA);
         }
 
-        player->stop();
-
         if (!wavAfter->isOpen())
             wavAfter->open(QIODevice::ReadOnly);
 
         wavAfter->reset();
         player->play(wavAfter);
+
+        ui->actionPlay->setIcon(QIcon(":/images/b_play_prev.png"));
+        ui->actionPlay->setText(tr("Replay"));
+        playing = true;
     }
 }
 
@@ -449,4 +481,16 @@ void RocaTool::updateSpectrum2()
 
     UpdateSpectrum2((float*)spectrumDataAfter.data(), stB, stA);
     spectrumAfter->setSpectrumData((float*)spectrumDataAfter.data(), SPECTRUM_FLOATS);
+}
+
+void RocaTool::onVolumeSet(int level)
+{
+    player->setVolume(level);
+}
+
+void RocaTool::onPlaybackEnded()
+{
+    ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+    ui->actionPlay->setText(tr("Play"));
+    playing = false;
 }

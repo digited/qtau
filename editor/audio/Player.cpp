@@ -6,7 +6,7 @@
 
 
 qtmmPlayer::qtmmPlayer(QObject *parent) :
-    QObject(parent), audioOutput(0)
+    QObject(parent), audioOutput(0), volume(50)
 {
     vsLog::d("QtMultimedia :: supported output devices and codecs:");
     QList<QAudioDeviceInfo> advs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
@@ -44,6 +44,7 @@ bool qtmmPlayer::play(qtauAudioSource *a)
             {
                 QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
                 audioOutput = new QAudioOutput(di, a->getAudioFormat(), this);
+                audioOutput->setVolume((qreal)volume / 100.f);
 
                 connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
                 connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
@@ -97,22 +98,28 @@ void qtmmPlayer::stop()
         audioOutput->stop();
 }
 
+void qtmmPlayer::setVolume(int level)
+{
+    level = qMax(qMin(level, 100), 0);
+    volume = level;
+
+    if (audioOutput)
+        audioOutput->setVolume((qreal)level / 100.f);
+}
+
 void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
 {
     switch (st)
     {
     case QAudio::ActiveState:
-        //qDebug() << "playing~";
-        break;
     case QAudio::SuspendedState:
-        //qDebug() << "suspended...";
         break;
+
     case QAudio::StoppedState:
-        //qDebug() << "stopped.";
-        break;
     case QAudio::IdleState:
-        //qDebug() << "idle";
+        emit playbackEnded();
         break;
+
     default:
         vsLog::e(QString("Unknown Qtmm Audio state: %1").arg(st));
         break;
@@ -121,5 +128,5 @@ void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
 
 void qtmmPlayer::onTick()
 {
-    //
+    emit tick();
 }

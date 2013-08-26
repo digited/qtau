@@ -1,6 +1,6 @@
 QT += core widgets network multimedia
 
-TARGET = RocaTool
+TARGET = FormantTester
 TEMPLATE = app
 
 INCLUDEPATH = ../..
@@ -91,9 +91,7 @@ FORMS += \
 RESOURCES += \
     res.qrc
 
-unix:!macx: LIBS += -L$$PWD/../CVEDSP/ -lCVEDSP
+LIBS += -L$$PWD/../CVEDSP/ -lCVEDSP
 
 INCLUDEPATH += $$PWD/../CVEDSP
 DEPENDPATH += $$PWD/../CVEDSP
-
-unix:!macx: PRE_TARGETDEPS += $$PWD/../CVEDSP/libCVEDSP.a

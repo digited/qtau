@@ -82,63 +82,69 @@ void qtauWaveform::updateCache()
 
         QVector<QLineF> lines;
 
-        int smpSt = 0;
-        int smpEnd = 0;
+        float samplesPerPixel = framesVisible / fW * fmt.channelCount();
+        int smpOff = (float)offset * samplesPerPixel;
 
-        bool noMoreSamples = false;
-        const QAudioFormat::SampleType sampType = fmt.sampleType();
-        float halfHeight = height() / 2;
-
-        for (int i = 0; i < width(); ++i) // for each visible pixel of width
+        if (smpOff < totalSamples) // if waveform is visible at all
         {
-            smpEnd = (float)(i+1) / fW * framesVisible * fmt.channelCount();
+            int smpSt  = smpOff;
+            int smpEnd = smpSt;
 
-            if (smpEnd >= totalSamples)
+            bool noMoreSamples = false;
+            const QAudioFormat::SampleType sampType = fmt.sampleType();
+            float halfHeight = height() / 2;
+
+            for (int i = 0; i < width(); ++i) // for each visible pixel of width
             {
-                noMoreSamples = true;
-                smpEnd = totalSamples - 1;
+                smpEnd = smpOff + (float)(i+1) * samplesPerPixel;
+
+                if (smpEnd >= totalSamples)
+                {
+                    noMoreSamples = true;
+                    smpEnd = totalSamples - 1;
+                }
+
+                float hiVal = -10.f;
+                float loVal =  10.f;
+
+                switch (sampType) // hoping that compiler will optimize const var + inline
+                {
+                case QAudioFormat::UnSignedInt: cycleU8 (smpSt, smpEnd, hiVal, loVal, (quint8*)wave->data().data());
+                    break;
+                case QAudioFormat::SignedInt:   cycleS16(smpSt, smpEnd, hiVal, loVal, (qint16*)wave->data().data());
+                    break;
+                case QAudioFormat::Float:       cycleF32(smpSt, smpEnd, hiVal, loVal, (float*) wave->data().data());
+                    break;
+                default:
+                    vsLog::e("Waveform can't update cache because of unknown sample format of wave!");
+                }
+
+                lines.append(QLineF(i, halfHeight + hiVal * halfHeight, i, halfHeight + loVal * halfHeight));
+
+                if (noMoreSamples) break;
+                else               smpSt = smpEnd;
             }
 
-            float hiVal = -10.f;
-            float loVal =  10.f;
+            QPainter p(bgCache);
 
-            switch (sampType) // hoping that compiler will optimize const var + inline
-            {
-            case QAudioFormat::UnSignedInt: cycleU8 (smpSt, smpEnd, hiVal, loVal, (quint8*)wave->data().data());
-                break;
-            case QAudioFormat::SignedInt:   cycleS16(smpSt, smpEnd, hiVal, loVal, (qint16*)wave->data().data());
-                break;
-            case QAudioFormat::Float:       cycleF32(smpSt, smpEnd, hiVal, loVal, (float*) wave->data().data());
-                break;
-            default:
-                vsLog::e("Waveform can't update cache because of unknown sample format of wave!");
-            }
+            QPen pen(p.pen());
+            pen.setColor(Qt::green);
+            pen.setWidth(1);
+            p.setPen(pen);
 
-            lines.append(QLineF(i, halfHeight + hiVal * halfHeight, i, halfHeight + loVal * halfHeight));
+            p.drawLines(lines);
 
-            if (noMoreSamples) break;
-            else               smpSt = smpEnd;
+            QLinearGradient lg(0,0,0,height());
+
+            lg.setColorAt(0.0,  QColor(255,255,255,170));
+            lg.setColorAt(0.35, QColor(255,255,255,64));
+            lg.setColorAt(0.65, QColor(255,255,255,64));
+            lg.setColorAt(1.0,  QColor(255,255,255,170));
+
+            p.setPen(Qt::NoPen);
+            p.setBrush(QBrush(lg));
+            p.drawRect(bgCache->rect());
         }
-
-        QPainter p(bgCache);
-
-        QPen pen(p.pen());
-        pen.setColor(Qt::green);
-        pen.setWidth(1);
-        p.setPen(pen);
-
-        p.drawLines(lines);
-
-        QLinearGradient lg(0,0,0,height());
-
-        lg.setColorAt(0.0, Qt::white);
-        lg.setColorAt(0.5, Qt::transparent);
-        lg.setColorAt(1.0, Qt::white);
-
-
-        p.setPen(Qt::NoPen);
-        p.setBrush(QBrush(lg));
-        p.drawRect(bgCache->rect());
     }
 
     update();
