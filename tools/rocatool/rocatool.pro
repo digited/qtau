@@ -91,8 +91,6 @@ FORMS += \
 RESOURCES += \
     res.qrc
 
-unix:!macx: LIBS += -L$$PWD/../CVEDSP/ -lCVEDSP
-
 INCLUDEPATH += $$PWD/../CVEDSP
 DEPENDPATH += $$PWD/../CVEDSP
 

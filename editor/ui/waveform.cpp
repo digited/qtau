@@ -21,9 +21,9 @@ qtauWaveform::~qtauWaveform()
 
 inline void cycleU8(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const quint8* data)
 {
-    for (int b = smpSt; b < smpEnd; ++b)
+    for (int s = smpSt; s < smpEnd; ++s)
     {
-        int iVal = (int)data[b] - 128;
+        int iVal = (int)data[s] - 128;
         float val = (float)iVal / 127.f;
 
         hiVal = qMax(hiVal, val);
@@ -33,13 +33,9 @@ inline void cycleU8(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const q
 
 inline void cycleS16(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const qint16 *data)
 {
-    int sampleSize = 2;
-    int byteSt  = smpSt  * sampleSize;
-    int byteEnd = smpEnd * sampleSize;
-
-    for (int b = byteSt; b < byteEnd; b += sampleSize)
+    for (int s = smpSt; s < smpEnd; ++s)
     {
-        float val = (float)data[b] / 32767.f;
+        float val = (float)data[s] / 32767.f;
 
         hiVal = qMax(hiVal, val);
         loVal = qMin(loVal, val);
@@ -48,13 +44,9 @@ inline void cycleS16(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const 
 
 inline void cycleF32(int &smpSt, int &smpEnd, float &hiVal, float &loVal, const float *data)
 {
-    int sampleSize = 4;
-    int byteSt  = smpSt  * sampleSize;
-    int byteEnd = smpEnd * sampleSize;
-
-    for (int b = byteSt; b < byteEnd; b += sampleSize)
+    for (int s = smpSt; s < smpEnd; ++s)
     {
-        float val = data[b];
+        float val = data[s];
 
         hiVal = qMax(hiVal, val);
         loVal = qMin(loVal, val);
@@ -136,6 +128,17 @@ void qtauWaveform::updateCache()
         p.setPen(pen);
 
         p.drawLines(lines);
+
+        QLinearGradient lg(0,0,0,height());
+
+        lg.setColorAt(0.0, Qt::white);
+        lg.setColorAt(0.5, Qt::transparent);
+        lg.setColorAt(1.0, Qt::white);
+
+
+        p.setPen(Qt::NoPen);
+        p.setBrush(QBrush(lg));
+        p.drawRect(bgCache->rect());
     }
 
     update();
