@@ -95,3 +95,5 @@ unix:!macx: LIBS += -L$$PWD/../CVEDSP/ -lCVEDSP
 
 INCLUDEPATH += $$PWD/../CVEDSP
 DEPENDPATH += $$PWD/../CVEDSP
+
+unix:!macx: PRE_TARGETDEPS += $$PWD/../CVEDSP/libCVEDSP.a
