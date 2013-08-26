@@ -110,7 +110,7 @@ inline qtauAudioSource* transformWaveToFloats(qtauAudioSource &as)
     qint64 tenSeconds = f.sampleRate() * 10;
     qint64 samples = qMin(as.size() / (f.sampleSize() / 8 * f.channelCount()), tenSeconds); // NOTE: max 10 seconds
 
-    QByteArray ba(samples * 4, '\0');
+    QByteArray ba(samples * 4 + f.sampleRate() * 4, '\0'); //One extra second for safety.
 
     switch (f.sampleType())
     {

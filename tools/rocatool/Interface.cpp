@@ -33,6 +33,7 @@ void LoadWav(float* wave, char channels, int sampleRate, unsigned long totalSamp
         Length = totalSamples - SampleRate;
         SetSampleRate(sampleRate);
         BF = GetBaseFrequencyFromWave(wave + Length / 2, 80, 1500, 13);
+        qDebug() << QString("Length: ") << Length;
         qDebug() << QString("Fundamental Freq: ") << BF;
 
         ExtractPulsesByBaseFrequency(Pulses, &PD, wave, BF, Length);
