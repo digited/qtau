@@ -83,6 +83,9 @@ bool qtmmPlayer::play(qtauAudioSource *a)
             }
         }
 
+    if (!result)
+        emit playbackEnded();
+
     return result;
 }
 
@@ -128,5 +131,5 @@ void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
 
 void qtmmPlayer::onTick()
 {
-    emit tick();
+    emit tick(audioOutput->elapsedUSecs());
 }

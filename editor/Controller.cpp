@@ -211,20 +211,71 @@ void qtauController::onLoadAudio(QString fileName)
 
 void qtauController::playAudio()
 {
-    //
+    if (activeSession)
+    {
+        if (playState.session != activeSession)
+        {
+            player->stop();
+            playState.session = activeSession;
+
+            qtauAudioSource *a = activeSession->getAudio();
+
+            if (a)
+            {
+                playState.state = Playing;
+                a->reset();
+                player->play(a);
+            }
+        }
+        else
+        {
+            switch (playState.state)
+            {
+            case Repeating:
+            case Playing:  player->pause(); playState.state = Paused;  break;
+            case Stopped:
+            case Paused:   player->play();  playState.state = Playing; break;
+
+            default:
+                vsLog::e(QString("Unknown player state in controller!").arg(playState.state));
+            }
+        }
+    }
+    else
+        vsLog::e("Someone asked controller to play something, but no session yet!");
 }
 
 void qtauController::stopAudio()
 {
-    //
+    player->stop();
 }
 
 void qtauController::backAudio()
 {
-    //
+    player->stop();
+
+    if (playState.session && playState.session->getAudio())
+    {
+        qtauAudioSource *a = playState.session->getAudio();
+
+        playState.state = Playing;
+        a->reset();
+        player->play(a);
+    }
 }
 
 void qtauController::repeatAudio()
 {
     //
+}
+
+void qtauController::onAudioPlaybackEnded()
+{
+    playState.state = Stopped;
+
+    if (playState.session && playState.session->getAudio())
+    {
+        playState.session->getAudio()->reset();
+        playState.session->onPlaybackFinished();
+    }
 }

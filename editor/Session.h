@@ -53,6 +53,7 @@ public:
 
     qtauAudioSource* getVocal() { return vocal; } // gotta be careful with pointers since they'll change on synth/drop
     qtauAudioSource* getMusic() { return music; }
+    qtauAudioSource* getAudio(); // returns whatever is available, or a mixer if both are set
 
 signals:
     void modifiedStatus(bool); /// if document is modified
@@ -63,9 +64,13 @@ signals:
 
     void vocalSet(); // when session gets synthesized audio from score
     void musicSet(); // when user adds bg (off-vocal?) music to play with synthesized vocals
+    void playbackTick(qint64 mcsecs);
+    void playbackFinished();
 
 public slots:
     void onUIEvent(qtauEvent *);
+    void onPlaybackTick(qint64 mcsecs);
+    void onPlaybackFinished();
 
 protected:
     bool parseUSTStrings(QStringList ustStrings);

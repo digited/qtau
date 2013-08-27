@@ -847,7 +847,6 @@ void MainWindow::onRedoStatus(bool canRedo)
     ui->actionRedo->setEnabled(canRedo);
 }
 
-
 void MainWindow::onDocEvent(qtauEvent* event)
 {
     if (event->type() >= ENoteEvents::add && event->type() <= ENoteEvents::effect)

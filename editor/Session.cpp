@@ -341,6 +341,11 @@ void qtauSession::setBackgroundAudio(qtauAudioSource &s)
     emit musicSet();
 }
 
+void qtauSession::onPlaybackTick(qint64 mcsecs)
+{
+    emit playbackTick(mcsecs); // maybe intermediate is redundant for fastest ui response possible for playback...
+}
+
 void qtauSession::setModified(bool m)
 {
     if (m != isModified)
@@ -367,4 +372,26 @@ void qtauSession::setSaved()
     }
     else
         vsLog::e("Saving an empty session?");
+}
+
+qtauAudioSource* qtauSession::getAudio()
+{
+    qtauAudioSource *result = 0;
+
+    if (vocal && music)
+    {
+        // TODO: make a mixer out of them, if not already
+    }
+    else
+    {
+        if (vocal) result = vocal;
+        else       result = music; // even if its 0
+    }
+
+    return result;
+}
+
+void qtauSession::onPlaybackFinished()
+{
+    emit playbackFinished(); // move it further to gui
 }

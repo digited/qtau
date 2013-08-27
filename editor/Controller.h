@@ -34,6 +34,7 @@ public slots:
     void onSaveUST(QString fileName, bool rewrite);
 
     void onLoadAudio(QString fileName);
+    void onAudioPlaybackEnded();
 
     void playAudio();
     void stopAudio();

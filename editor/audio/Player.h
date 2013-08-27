@@ -19,13 +19,12 @@ public:
     bool play(qtauAudioSource *a = 0);
     void pause();
     void stop();
-    void reset() { stop(); play(); }
 
     void setVolume(int level); // 0..100
 
 signals:
     void playbackEnded();
-    void tick();
+    void tick(qint64 mcsec);
 
 public slots:
     void onQtmmStateChanged(QAudio::State);
