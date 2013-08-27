@@ -18,17 +18,22 @@ public:
     } EEventLink;
 
     qtauEvent(int type = 0, bool forward = true, EEventLink link = single) :
-        _type(type), _forward(forward), _linkType(link) {}
+        _type(type), _forward(forward), _linkType(link), _isSavePoint(false) {}
     virtual ~qtauEvent()   {}
 
     int type()            const { return _type;     }
     bool isForward()      const { return _forward;  } // is event used to apply or to revert its changeset
     EEventLink isLinked() const { return _linkType; } // should event be applied with other(s)
 
+    bool isSavePoint()                  { return _isSavePoint; }
+    void setSavePoint(bool isSP = true) { _isSavePoint = isSP; }
+
 protected:
     int  _type;
     bool _forward;
     EEventLink _linkType;
+
+    bool _isSavePoint;
 
     virtual qtauEvent *allocCopy() const = 0; // should create exact copy of event object on heap
 

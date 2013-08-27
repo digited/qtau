@@ -1,4 +1,5 @@
 #include "editor/ui/waveform.h"
+#include "editor/ui/Config.h"
 #include "editor/audio/Source.h"
 
 #include <qmath.h>
@@ -66,7 +67,7 @@ void qtauWaveform::updateCache()
     if (!bgCache)
         bgCache = new QPixmap(requiredCacheWidth, this->rect().height());
 
-    bgCache->fill(Qt::transparent);
+    bgCache->fill(QColor(255,255,255,255));
 
     if (wave && !wave->data().isEmpty())
     {
@@ -128,7 +129,7 @@ void qtauWaveform::updateCache()
             QPainter p(bgCache);
 
             QPen pen(p.pen());
-            pen.setColor(Qt::green);
+            pen.setColor(QColor(DEFCOLOR_INNER_LINE));
             pen.setWidth(1);
             p.setPen(pen);
 

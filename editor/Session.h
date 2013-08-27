@@ -31,6 +31,7 @@ public:
     const ust&  ustRef();
 
     QString documentName() { return docName; }
+    QString documentFile() { return filePath; }
 
     void setDocName(const QString &name);
     void setFilePath(const QString &fp);
@@ -38,7 +39,8 @@ public:
     bool isSessionEmpty()    const { return noteMap.isEmpty(); } /// returns true if doesn't contain any data
     bool isSessionModified() const { return isModified; }        /// if has changes from last save/load
 
-    void setModified(bool m)       { isModified = m; }
+    void setModified(bool m);
+    void setSaved(); // if doc was saved at this point
 
     typedef enum {
         nothingToPlay = 0,
@@ -70,6 +72,7 @@ protected:
     QString filePath;
     QString docName;
     bool    isModified;
+    bool    hadSavePoint; // if was saved having a non-empty event stack
 
     qtauAudioSource *vocal;
     qtauAudioSource *music;

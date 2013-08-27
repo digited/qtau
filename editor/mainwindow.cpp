@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowIcon(QIcon(":/images/appicon_ouka_alice.png"));
     setWindowTitle("QTau");
+    setAcceptDrops(true);
     setContextMenuPolicy(Qt::NoContextMenu);
 
     //-----------------------------------------
@@ -442,7 +443,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionQuit,    SIGNAL(triggered()), SLOT(onQuit()));
     connect(ui->actionOpen,    SIGNAL(triggered()), SLOT(onOpenUST()));
-    connect(ui->actionSave_as, SIGNAL(triggered()), SLOT(onSaveUST()));
+    connect(ui->actionSave,    SIGNAL(triggered()), SLOT(onSaveUST()));
+    connect(ui->actionSave_as, SIGNAL(triggered()), SLOT(onSaveUSTAs()));
 
     connect(ui->actionUndo,    SIGNAL(triggered()), SLOT(onUndo()));
     connect(ui->actionRedo,    SIGNAL(triggered()), SLOT(onRedo()));
@@ -472,7 +474,6 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     doc = &s;
 
     connect(noteEditor, SIGNAL(editorEvent(qtauEvent*)), doc, SLOT(onUIEvent(qtauEvent*)));
-    connect(noteEditor, SIGNAL(urisDropped(QList<QUrl>)), SLOT(onEditorUrisDropped(QList<QUrl>)));
 
     connect(doc, SIGNAL(dataReloaded()),       SLOT(onDocReloaded()));
     connect(doc, SIGNAL(modifiedStatus(bool)), SLOT(onDocStatus(bool)));
@@ -518,6 +519,14 @@ void MainWindow::onOpenUST()
 }
 
 void MainWindow::onSaveUST()
+{
+    if (doc->documentFile().isEmpty())
+        onSaveUSTAs();
+    else
+        emit saveUST(doc->documentFile(), true);
+}
+
+void MainWindow::onSaveUSTAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
         tr("Save UST"), "", tr("UTAU Sequence Text Files (*.ust)"));
@@ -818,7 +827,13 @@ void MainWindow::onDocReloaded()
 
 void MainWindow::onDocStatus(bool isModified)
 {
-    setWindowTitle((isModified ? "*" : "") + doc->documentName() + " - QTau");
+    QString newDocName = doc->documentName();
+
+    if (docName != newDocName)
+        docName = newDocName;
+
+    setWindowTitle((isModified ? "*" : "") + docName + " - QTau");
+
     ui->actionSave->setEnabled(isModified);
 }
 
@@ -839,8 +854,46 @@ void MainWindow::onDocEvent(qtauEvent* event)
         noteEditor->onEvent(event);
 }
 
-void MainWindow::onEditorUrisDropped(QList<QUrl> uris)
+void MainWindow::onVocalAudioChanged()
 {
+    // show vocal waveform panel and send audioSource to it for generation
+    vocalWavePanel->setVisible(true);
+    vocalWave->setAudio(doc->getVocal());
+
+    ui->actionPlay->setEnabled(true); // it isn't at startup because nothing to play
+}
+
+void MainWindow::onMusicAudioChanged()
+{
+    // show & fill music waveform panel
+    musicWavePanel->setVisible(true);
+    musicWave->setAudio(doc->getMusic());
+
+    ui->actionPlay->setEnabled(true);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    // accepting filepaths
+    if (event->mimeData()->hasFormat("text/uri-list"))
+        event->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *event)
+{
+    // accepting filepaths
+    if (event->mimeData()->hasFormat("text/uri-list"))
+        event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    QList<QUrl> uris;
+
+    foreach (const QByteArray &uriData, event->mimeData()->data("text/uri-list").split('\n'))
+        if (!uriData.isEmpty())
+            uris << QUrl::fromEncoded(uriData).toLocalFile().remove('\r');
+
     if (!uris.isEmpty())
     {
         QFileInfo fi(uris.first().toString());
@@ -863,22 +916,4 @@ void MainWindow::onEditorUrisDropped(QList<QUrl> uris)
                 vsLog::e("File extension not supported: " + fi.suffix());
         }
     }
-}
-
-void MainWindow::onVocalAudioChanged()
-{
-    // show vocal waveform panel and send audioSource to it for generation
-    vocalWavePanel->setVisible(true);
-    vocalWave->setAudio(doc->getVocal());
-
-    ui->actionPlay->setEnabled(true); // it isn't at startup because nothing to play
-}
-
-void MainWindow::onMusicAudioChanged()
-{
-    // show & fill music waveform panel
-    musicWavePanel->setVisible(true);
-    musicWave->setAudio(doc->getMusic());
-
-    ui->actionPlay->setEnabled(true);
 }

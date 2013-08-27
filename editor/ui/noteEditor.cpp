@@ -29,8 +29,6 @@ qtauNoteEditor::qtauNoteEditor(QWidget *parent) :
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoFillBackground(false);
 
-    setAcceptDrops(true);
-
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
@@ -464,30 +462,4 @@ void qtauNoteEditor::rmbScrollHappened(const QPoint &delta, const QPoint &offset
 void qtauNoteEditor::eventHappened(qtauEvent *e)
 {
     emit editorEvent(e);
-}
-
-void qtauNoteEditor::dragEnterEvent(QDragEnterEvent *event)
-{
-    // accepting filepaths
-    if (event->mimeData()->hasFormat("text/uri-list"))
-        event->acceptProposedAction();
-}
-
-void qtauNoteEditor::dragMoveEvent(QDragMoveEvent *event)
-{
-    // accepting filepaths
-    if (event->mimeData()->hasFormat("text/uri-list"))
-        event->acceptProposedAction();
-}
-
-void qtauNoteEditor::dropEvent(QDropEvent *event)
-{
-    QList<QUrl> uris;
-
-    foreach (const QByteArray &uriData, event->mimeData()->data("text/uri-list").split('\n'))
-        if (!uriData.isEmpty())
-            uris << QUrl::fromEncoded(uriData).toLocalFile().remove('\r');
-
-    if (!uris.isEmpty())
-        emit urisDropped(uris);
 }

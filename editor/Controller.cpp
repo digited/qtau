@@ -2,12 +2,10 @@
 
 #include "editor/Session.h"
 #include "editor/Controller.h"
-#include "editor/Events.h"
 #include "editor/PluginInterfaces.h"
 #include "editor/Utils.h"
 
 #include "editor/audio/Player.h"
-#include "editor/audio/Codec.h"
 #include "editor/audio/CodecBase.h"
 
 #include <QtWidgets/QApplication>
@@ -15,13 +13,12 @@
 
 
 qtauController::qtauController(QObject *parent) :
-    QObject(parent), audio(0), activeSession(0)
+    QObject(parent), activeSession(0)
 {
     qtauCodecRegistry::instance()->addCodec(new qtauWavCodecFactory());
     //qtauCodecRegistry::instance()->addCodec(new qtauFlacCodecFactory());
     //qtauCodecRegistry::instance()->addCodec(new qtauOggCodecFactory());
 
-    events = new qtauEventManager(this);
     player = new qtmmPlayer(this);
 
     setupTranslations();
@@ -146,7 +143,8 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
                 uf.write(activeSession->ustBinary());
                 uf.close();
 
-                activeSession->setModified(false);
+                activeSession->setFilePath(fileName);
+                activeSession->setSaved();
 
                 vsLog::s("UST saved to " + fileName);
             }

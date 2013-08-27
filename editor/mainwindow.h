@@ -59,11 +59,10 @@ public slots:
     void onLog(const QString&, int);
     void onOpenUST();
     void onSaveUST();
+    void onSaveUSTAs();
 
     void onVocalAudioChanged();
     void onMusicAudioChanged();
-
-    void onEditorUrisDropped(QList<QUrl> uris);
 
     void notesVScrolled(int);
     void notesHScrolled(int);
@@ -135,6 +134,11 @@ protected:
     void enableToolbars(bool enable = true);
 
     bool logHasErrors;
+    QString docName;
+
+    void dragEnterEvent(QDragEnterEvent *);
+    void dragMoveEvent(QDragMoveEvent *);
+    void dropEvent(QDropEvent *);
 
 };
 

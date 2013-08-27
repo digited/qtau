@@ -6,10 +6,9 @@
 #include <QDir>
 
 class MainWindow;
-class qtauEventManager;
 class qtauSynth;
 class qtmmPlayer;
-class qtauAudio;
+class qtauAudioSource;
 class qtauSession;
 class IResampler;
 
@@ -46,12 +45,25 @@ public slots:
 
 protected:
     qtmmPlayer *player;
-    qtauAudio  *audio;
     MainWindow *mw;
-    qtauEventManager *events;
 
     QMap<QString, qtauSession*> sessions;
     qtauSession *activeSession;
+
+    typedef enum {
+        Playing = 0,
+        Paused,
+        Stopped,
+        Repeating
+    } EPlayState;
+
+    typedef struct {
+        EPlayState       state;
+        qtauAudioSource *audio;
+        qtauSession     *session;
+    } SPlayState;
+
+    SPlayState playState;
 
     bool setupTranslations();
     bool setupPlugins();

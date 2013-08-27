@@ -6,7 +6,7 @@ Free opensource UTAU-like editor for singing synthesizers, uses Qt.
 * Dependencies: Qt 5
 * OS: any supported by Qt
 
-Linked projects: [lesynth] [2], [lauloid] [3], [Rocaloid] [4]
+Linked projects: [Rocaloid] [4], [LeSynth] [2], [lauloid] [3]
 
 Discussion: issues here, [utaforum thread] [5], [twitter] [6] or #vocadb at irc.rizon.net
 

@@ -3,12 +3,14 @@
 #include "editor/audio/Source.h"
 
 #include <QFile>
+#include <QFileInfo>
 #include <QTextStream>
 #include <QStringList>
 
 
 qtauSession::qtauSession(QObject *parent) :
-    qtauEventManager(parent), docName(tr("Untitled")), isModified(false), vocal(0), music(0)
+    qtauEventManager(parent), docName(tr("Untitled")), isModified(false), hadSavePoint(false),
+    vocal(0), music(0)
 {
     data.clear();
 }
@@ -68,7 +70,8 @@ bool qtauSession::loadUST(QString fileName)
 
                 clearHistory(); // or make a delete event + settings change event + filepath change event
                 data = tmp_u;
-                docName = fileName;
+                docName  = QFileInfo(fileName).baseName();
+                filePath = fileName;
                 qtauEvent_NoteAddition *loadNotesChangeset = util_makeAddNotesEvent(data);
                 applyEvent_NoteAdded(*loadNotesChangeset);
 
@@ -136,7 +139,10 @@ void qtauSession::setFilePath(const QString &fp)
     if (fp.isEmpty())
         vsLog::e("Shouldn't set empty filepath for session! Ignoring...");
     else
+    {
         filePath = fp;
+        docName = QFileInfo(fp).baseName();
+    }
 }
 
 //----- inner data functions -----------------------------
@@ -307,11 +313,14 @@ void qtauSession::onUIEvent(qtauEvent *e)
 
 void qtauSession::stackChanged()
 {
-    isModified = canUndo(); // TODO: something better
+    if (canUndo())
+        isModified = !events.top()->isSavePoint();
+    else
+        isModified = hadSavePoint;
 
     emit undoStatus(canUndo());
     emit redoStatus(canRedo());
-    emit modifiedStatus(isSessionModified());
+    emit modifiedStatus(isModified);
 }
 
 void qtauSession::setSynthesizedVocal(qtauAudioSource &s)
@@ -330,4 +339,32 @@ void qtauSession::setBackgroundAudio(qtauAudioSource &s)
 
     music = &s;
     emit musicSet();
+}
+
+void qtauSession::setModified(bool m)
+{
+    if (m != isModified)
+    {
+        isModified = m;
+        emit modifiedStatus(isModified);
+    }
+}
+
+void qtauSession::setSaved()
+{
+    if (canUndo())
+    {
+        foreach (qtauEvent *e, events)
+            e->setSavePoint(false);
+
+        if (!futureEvents.isEmpty())
+            foreach (qtauEvent *e, futureEvents)
+                e->setSavePoint(false);
+
+        hadSavePoint = true;
+        events.top()->setSavePoint();
+        setModified(false);
+    }
+    else
+        vsLog::e("Saving an empty session?");
 }
