@@ -11,7 +11,7 @@ class Spectrum;
 class QIcon;
 class QSlider;
 class QPushButton;
-class QLabel;
+class QLineEdit;
 
 
 namespace Ui {
@@ -45,6 +45,20 @@ public slots:
     void onaS1(int);
     void onaS2(int);
     void onaS3(int);
+
+    void bF1valEdited();
+    void bF2valEdited();
+    void bF3valEdited();
+    void aF1valEdited();
+    void aF2valEdited();
+    void aF3valEdited();
+
+    void bS1valEdited();
+    void bS2valEdited();
+    void bS3valEdited();
+    void aS1valEdited();
+    void aS2valEdited();
+    void aS3valEdited();
 
     void onPlay();
     void onVolumeSet(int);
@@ -81,21 +95,21 @@ protected:
     QSlider *aS2;
     QSlider *aS3;
 
-    QLabel  *bF1val;
-    QLabel  *bF2val;
-    QLabel  *bF3val;
+    QLineEdit *bF1val;
+    QLineEdit *bF2val;
+    QLineEdit *bF3val;
 
-    QLabel  *bS1val;
-    QLabel  *bS2val;
-    QLabel  *bS3val;
+    QLineEdit *bS1val;
+    QLineEdit *bS2val;
+    QLineEdit *bS3val;
 
-    QLabel  *aF1val;
-    QLabel  *aF2val;
-    QLabel  *aF3val;
+    QLineEdit *aF1val;
+    QLineEdit *aF2val;
+    QLineEdit *aF3val;
 
-    QLabel  *aS1val;
-    QLabel  *aS2val;
-    QLabel  *aS3val;
+    QLineEdit *aS1val;
+    QLineEdit *aS2val;
+    QLineEdit *aS3val;
     //-------------------------------
 
     qtauAudioSource* loadAudio(const QString &fileName);

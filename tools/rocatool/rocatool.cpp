@@ -7,9 +7,13 @@
 
 #include <QSlider>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QToolBar>
 #include <QGridLayout>
+
+#include <QIntValidator>
+#include <QDoubleValidator>
 
 #include <QUrl>
 #include <QFileInfo>
@@ -39,20 +43,43 @@ inline QLabel* makeLabel(const QString &txt, Qt::Alignment align, QWidget *paren
     return l;
 }
 
-inline QLabel* makeLeftLabel (const QString &txt, QWidget *parent = 0) { return makeLabel(txt, Qt::AlignRight, parent); }
-inline QLabel* makeRightLabel(const QString &txt, QWidget *parent = 0) { return makeLabel(txt, Qt::AlignLeft,  parent); }
+inline QLineEdit* makeLineEdit(const QString &txt, bool floats, QWidget *parent = 0)
+{
+    QLineEdit *le = new QLineEdit(txt, parent);
+    le->setFixedWidth(50);
+
+    if (floats)
+    {
+        QDoubleValidator *dv = new QDoubleValidator(0, 3, 2, le);
+        dv->setNotation(QDoubleValidator::StandardNotation);
+        QLocale usLocale(QLocale::English, QLocale::UnitedStates);
+        dv->setLocale(usLocale);
+        le->setValidator(dv);
+    }
+    else
+        le->setValidator(new QIntValidator   (0, 6000, le));
+
+    return le;
+}
+
+inline QLabel* makeLeftLabel (const QString &txt, QWidget *parent = 0)
+{ return makeLabel(txt, Qt::AlignRight, parent); }
+
+inline QLineEdit* makeRightLabel(const QString &txt, bool floats, QWidget *parent = 0)
+{ return makeLineEdit(txt, floats, parent); }
 
 inline QSlider* makeSlider(int max, QWidget *parent = 0)
 {
     QSlider *s = new QSlider(Qt::Horizontal, parent);
     s->setMaximum(max);
+    s->setPageStep(1);
     return s;
 }
 
 inline QSlider* makeFreqSlider    (QWidget *parent = 0) { return makeSlider(6000, parent); }
-inline QSlider* makeStrengthSlider(QWidget *parent = 0) { return makeSlider(30,   parent); }
+inline QSlider* makeStrengthSlider(QWidget *parent = 0) { return makeSlider(300,  parent); }
 
-inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlider *bS, QLabel *bL, QSlider *aS, QLabel *aL)
+inline void makeRowOfSliders(int row, QGridLayout *gl, const QString &txt, QSlider *bS, QLineEdit *bL, QSlider *aS, QLineEdit *aL)
 {
     QLabel *rl1 = makeLeftLabel(txt);
     QLabel *rl2 = makeLeftLabel(txt);
@@ -172,13 +199,13 @@ RocaTool::RocaTool(QWidget *parent) :
     bF1 = makeFreqSlider(this);
     bF2 = makeFreqSlider(this);
     bF3 = makeFreqSlider(this);
-    aF1 = makeFreqSlider(this);
-    aF2 = makeFreqSlider(this);
-    aF3 = makeFreqSlider(this);
-
     bS1 = makeStrengthSlider(this);
     bS2 = makeStrengthSlider(this);
     bS3 = makeStrengthSlider(this);
+
+    aF1 = makeFreqSlider(this);
+    aF2 = makeFreqSlider(this);
+    aF3 = makeFreqSlider(this);
     aS1 = makeStrengthSlider(this);
     aS2 = makeStrengthSlider(this);
     aS3 = makeStrengthSlider(this);
@@ -190,26 +217,26 @@ RocaTool::RocaTool(QWidget *parent) :
     aF3->setValue(4000);
     bF3->setValue(4000);
 
-    aS1->setValue(10);
-    bS1->setValue(10);
-    aS2->setValue(10);
-    bS2->setValue(10);
-    aS3->setValue(10);
-    bS3->setValue(10);
+    aS1->setValue(100);
+    bS1->setValue(100);
+    aS2->setValue(100);
+    bS2->setValue(100);
+    aS3->setValue(100);
+    bS3->setValue(100);
 
-    bF1val = makeRightLabel("1000", this);
-    bF2val = makeRightLabel("1500", this);
-    bF3val = makeRightLabel("4000", this);
-    aF1val = makeRightLabel("1000", this);
-    aF2val = makeRightLabel("1500", this);
-    aF3val = makeRightLabel("4000", this);
+    bF1val = makeRightLabel("1000", false, this);
+    bF2val = makeRightLabel("1500", false, this);
+    bF3val = makeRightLabel("4000", false, this);
+    bS1val = makeRightLabel("1",    true,  this);
+    bS2val = makeRightLabel("1",    true,  this);
+    bS3val = makeRightLabel("1",    true,  this);
 
-    bS1val = makeRightLabel("1", this);
-    bS2val = makeRightLabel("1", this);
-    bS3val = makeRightLabel("1", this);
-    aS1val = makeRightLabel("1", this);
-    aS2val = makeRightLabel("1", this);
-    aS3val = makeRightLabel("1", this);
+    aF1val = makeRightLabel("1000", false, this);
+    aF2val = makeRightLabel("1500", false, this);
+    aF3val = makeRightLabel("4000", false, this);
+    aS1val = makeRightLabel("1",    true,  this);
+    aS2val = makeRightLabel("1",    true,  this);
+    aS3val = makeRightLabel("1",    true,  this);
 
     QLabel *befLbl = new QLabel("Before");
     QLabel *aftLbl = new QLabel("After");
@@ -271,6 +298,25 @@ RocaTool::RocaTool(QWidget *parent) :
     connect(aS1, SIGNAL(valueChanged(int)), SLOT(onaS1(int)));
     connect(aS2, SIGNAL(valueChanged(int)), SLOT(onaS2(int)));
     connect(aS3, SIGNAL(valueChanged(int)), SLOT(onaS3(int)));
+
+    //------------
+
+    connect(bF1val, SIGNAL(editingFinished()), SLOT(bF1valEdited()));
+    connect(bF2val, SIGNAL(editingFinished()), SLOT(bF2valEdited()));
+    connect(bF3val, SIGNAL(editingFinished()), SLOT(bF3valEdited()));
+
+    connect(bS1val, SIGNAL(editingFinished()), SLOT(bS1valEdited()));
+    connect(bS2val, SIGNAL(editingFinished()), SLOT(bS2valEdited()));
+    connect(bS3val, SIGNAL(editingFinished()), SLOT(bS3valEdited()));
+
+    connect(aF1val, SIGNAL(editingFinished()), SLOT(aF1valEdited()));
+    connect(aF2val, SIGNAL(editingFinished()), SLOT(aF2valEdited()));
+    connect(aF3val, SIGNAL(editingFinished()), SLOT(aF3valEdited()));
+
+    connect(aS1val, SIGNAL(editingFinished()), SLOT(aS1valEdited()));
+    connect(aS2val, SIGNAL(editingFinished()), SLOT(aS2valEdited()));
+    connect(aS3val, SIGNAL(editingFinished()), SLOT(aS3valEdited()));
+
     //--------------------------------------------
 
     ui->centralwidget->setLayout(gl);
@@ -365,20 +411,36 @@ void RocaTool::onbF1(int val) { bF1val->setText(QString("%1").arg(val)); updateS
 void RocaTool::onbF2(int val) { bF2val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onbF3(int val) { bF3val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 
+void RocaTool::bF1valEdited() { bF1->setValue(bF1val->text().toInt()); }
+void RocaTool::bF2valEdited() { bF2->setValue(bF2val->text().toInt()); }
+void RocaTool::bF3valEdited() { bF3->setValue(bF3val->text().toInt()); }
+
 // after-synth Formants
 void RocaTool::onaF1(int val) { aF1val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF2(int val) { aF2val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 void RocaTool::onaF3(int val) { aF3val->setText(QString("%1").arg(val)); updateSpectrum2(); }
 
+void RocaTool::aF1valEdited() { aF1->setValue(aF1val->text().toInt()); }
+void RocaTool::aF2valEdited() { aF2->setValue(aF2val->text().toInt()); }
+void RocaTool::aF3valEdited() { aF3->setValue(aF3val->text().toInt()); }
+
 // before-synth Strength
-void RocaTool::onbS1(int val) { bS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
-void RocaTool::onbS2(int val) { bS2val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
-void RocaTool::onbS3(int val) { bS3val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
+void RocaTool::onbS1(int val) { bS1val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+void RocaTool::onbS2(int val) { bS2val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+void RocaTool::onbS3(int val) { bS3val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+
+void RocaTool::bS1valEdited() { bS1->setValue(bS1val->text().toFloat() * 100); }
+void RocaTool::bS2valEdited() { bS2->setValue(bS2val->text().toFloat() * 100); }
+void RocaTool::bS3valEdited() { bS3->setValue(bS3val->text().toFloat() * 100); }
 
 // after-synth Strength
-void RocaTool::onaS1(int val) { aS1val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
-void RocaTool::onaS2(int val) { aS2val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
-void RocaTool::onaS3(int val) { aS3val->setText(QString("%1").arg((float)val / 10.f)); updateSpectrum2(); }
+void RocaTool::onaS1(int val) { aS1val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+void RocaTool::onaS2(int val) { aS2val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+void RocaTool::onaS3(int val) { aS3val->setText(QString("%1").arg((float)val / 100)); updateSpectrum2(); }
+
+void RocaTool::aS1valEdited() { aS1->setValue(aS1val->text().toFloat() * 100); }
+void RocaTool::aS2valEdited() { aS2->setValue(aS2val->text().toFloat() * 100); }
+void RocaTool::aS3valEdited() { aS3->setValue(aS3val->text().toFloat() * 100); }
 
 //----------- playback controls ---------------------
 void RocaTool::onPlay()
@@ -461,26 +523,29 @@ void RocaTool::updateSpectrum1()
 
 void RocaTool::updateSpectrum2()
 {
-    FECSOLAState stA;
-    stA.F1 = aF1->value();
-    stA.F2 = aF2->value();
-    stA.F3 = aF3->value();
+    if (wavAfter)
+    {
+        FECSOLAState stA;
+        stA.F1 = aF1->value();
+        stA.F2 = aF2->value();
+        stA.F3 = aF3->value();
 
-    stA.S1 = aS1->value();
-    stA.S2 = aS2->value();
-    stA.S3 = aS3->value();
+        stA.S1 = aS1->value();
+        stA.S2 = aS2->value();
+        stA.S3 = aS3->value();
 
-    FECSOLAState stB;
-    stB.F1 = bF1->value();
-    stB.F2 = bF2->value();
-    stB.F3 = bF3->value();
+        FECSOLAState stB;
+        stB.F1 = bF1->value();
+        stB.F2 = bF2->value();
+        stB.F3 = bF3->value();
 
-    stB.S1 = bS1->value();
-    stB.S2 = bS2->value();
-    stB.S3 = bS3->value();
+        stB.S1 = bS1->value();
+        stB.S2 = bS2->value();
+        stB.S3 = bS3->value();
 
-    UpdateSpectrum2((float*)spectrumDataAfter.data(), stB, stA);
-    spectrumAfter->setSpectrumData((float*)spectrumDataAfter.data(), SPECTRUM_FLOATS);
+        UpdateSpectrum2((float*)spectrumDataAfter.data(), stB, stA);
+        spectrumAfter->setSpectrumData((float*)spectrumDataAfter.data(), SPECTRUM_FLOATS);
+    }
 }
 
 void RocaTool::onVolumeSet(int level)
