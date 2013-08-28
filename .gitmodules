@@ -1,3 +1,6 @@
 [submodule "tools/CVEDSP"]
 	path = tools/CVEDSP
 	url = https://github.com/Sleepwalking/CVEDSP.git
+[submodule "tools/lesynth"]
+	path = tools/lesynth
+	url = https://github.com/digited/lesynth.git
