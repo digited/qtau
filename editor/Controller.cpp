@@ -78,10 +78,10 @@ bool qtauController::setupPlugins()
 
         if (plugin)
         {
-            IResampler* rsmplr = qobject_cast<IResampler *>(plugin);
+            ISynth* s = qobject_cast<ISynth*>(plugin);
 
-            if (rsmplr)
-                initResampler(rsmplr);
+            if (s)
+                initSynth(s);
         }
     }
 
@@ -89,17 +89,16 @@ bool qtauController::setupPlugins()
 }
 
 
-void qtauController::initResampler(IResampler *r)
+void qtauController::initSynth(ISynth *s)
 {
-    if (!synths.contains(r->name()))
+    if (!synths.contains(s->name()))
     {
-        vsLog::s("Adding resampler " + r->name());
-        synths[r->name()] = r;
+        vsLog::s("Adding synthesizer " + s->name());
+        synths[s->name()] = s;
 
         // TODO: do something
     }
-    else
-        vsLog::d("Resampler " + r->name() + " is already registered!");
+    else vsLog::d("Synthesizer " + s->name() + " is already registered!");
 }
 
 
@@ -111,8 +110,14 @@ bool qtauController::setupVoicebanks()
 void qtauController::newEmptySession()
 {
     activeSession = new qtauSession(this);
-}
 
+    connect(activeSession, SIGNAL(requestSynthesis()),      SLOT(onRequestSynthesis     ()));
+    connect(activeSession, SIGNAL(requestStartPlayback()),  SLOT(onRequestStartPlayback ()));
+    connect(activeSession, SIGNAL(requestPausePlayback()),  SLOT(onRequestPausePlayback ()));
+    connect(activeSession, SIGNAL(requestStopPlayback()),   SLOT(onRequestStopPlayback  ()));
+    connect(activeSession, SIGNAL(requestResetPlayback()),  SLOT(onRequestResetPlayback ()));
+    connect(activeSession, SIGNAL(requestRepeatPlayback()), SLOT(onRequestRepeatPlayback()));
+}
 
 //------------------------------------------
 
@@ -125,8 +130,7 @@ void qtauController::onLoadUST(QString fileName)
 
         activeSession->loadUST(fileName);
     }
-    else
-        vsLog::d("Controller: empty UST file name");
+    else vsLog::d("Controller: empty UST file name");
 }
 
 void qtauController::onSaveUST(QString fileName, bool rewrite)
@@ -148,14 +152,11 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
 
                 vsLog::s("UST saved to " + fileName);
             }
-            else
-                vsLog::e("File " + fileName + " is not empty, rewriting cancelled");
+            else vsLog::e("File " + fileName + " is not empty, rewriting cancelled");
         }
-        else
-            vsLog::e("Could not open file " + fileName + " to save UST");
+        else vsLog::e("Could not open file " + fileName + " to save UST");
     }
-    else
-        vsLog::e("Trying to save ust from empty session!");
+    else vsLog::e("Trying to save ust from empty session!");
 }
 
 
@@ -199,83 +200,133 @@ void qtauController::onLoadAudio(QString fileName)
 
                 f.close();
             }
-            else
-                vsLog::e("Could not open file " + fileName);
+            else vsLog::e("Could not open file " + fileName);
         }
-        else
-            vsLog::e("Wrong file name: " + fileName);
+        else vsLog::e("Wrong file name: " + fileName);
     }
-    else
-        vsLog::e("Controller was requested to load audio with empty filename! Spam hatemail to admin@microsoft.com");
-}
-
-void qtauController::playAudio()
-{
-    if (activeSession)
-    {
-        if (playState.session != activeSession)
-        {
-            player->stop();
-            playState.session = activeSession;
-
-            qtauAudioSource *a = activeSession->getAudio();
-
-            if (a)
-            {
-                playState.state = Playing;
-                a->reset();
-                player->play(a);
-            }
-        }
-        else
-        {
-            switch (playState.state)
-            {
-            case Repeating:
-            case Playing:  player->pause(); playState.state = Paused;  break;
-            case Stopped:
-            case Paused:   player->play();  playState.state = Playing; break;
-
-            default:
-                vsLog::e(QString("Unknown player state in controller!").arg(playState.state));
-            }
-        }
-    }
-    else
-        vsLog::e("Someone asked controller to play something, but no session yet!");
-}
-
-void qtauController::stopAudio()
-{
-    player->stop();
-}
-
-void qtauController::backAudio()
-{
-    player->stop();
-
-    if (playState.session && playState.session->getAudio())
-    {
-        qtauAudioSource *a = playState.session->getAudio();
-
-        playState.state = Playing;
-        a->reset();
-        player->play(a);
-    }
-}
-
-void qtauController::repeatAudio()
-{
-    //
+    else vsLog::e("Controller was requested to load audio with empty filename! Spam hatemail to admin@microsoft.com");
 }
 
 void qtauController::onAudioPlaybackEnded()
 {
-    playState.state = Stopped;
+//    if (playState.state == Repeating)
+//        player->play();
 
-    if (playState.session && playState.session->getAudio())
+    playState.state = Stopped;
+    activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+}
+
+void qtauController::onVolumeChanged(int level)
+{
+    player->setVolume(level);
+}
+
+void qtauController::onRequestSynthesis()
+{
+    if (!activeSession->isSessionEmpty())
     {
-        playState.session->getAudio()->reset();
-        playState.session->onPlaybackFinished();
+        if (!synths.isEmpty())
+        {
+            if (playState.state != Stopped)
+            {
+                player->stop();
+                activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+            }
+
+            ISynth *s = synths.values().first();
+
+            s->setVocals(activeSession->ustRef());
+
+            if (s->isVbReady() && s->isVocalsReady())
+            {
+                if (s->synthesize(*activeSession->getVocal().vocalWave))
+                {
+                    vsLog::s("Synthesis complete. Yay!");
+                    activeSession->getVocal().needsSynthesis = false;
+
+                    onRequestStartPlayback();
+                }
+                else vsLog::e("Synthesis failed. Oh no!");
+            }
+            else vsLog::e("Synthesizer isn't ready for some reason...");
+        }
+        else vsLog::e("No synthesizers registered! What a shame!");
     }
+    else vsLog::e("Session is empty, nothing to synthesize.");
+}
+
+void qtauController::onRequestStartPlayback()
+{
+    // play only vocal or only audio (depending on what's available), or a mixdown of both
+    qtauSession::SVocalWaveSetup &v = activeSession->getVocal();
+    qtauSession::SMusicWaveSetup &m = activeSession->getMusic();
+
+    bool gotVocal = v.vocalWave && !v.vocalWave->buffer().isEmpty();
+    bool gotMusic = m.musicWave && !m.musicWave->buffer().isEmpty();
+
+    if (gotVocal)
+    {
+        if (gotMusic)
+        {
+            // play mixdown
+        }
+        else
+        {
+            // play just vocal
+        }
+    }
+    else if (gotMusic)
+    {
+        if (!(playState.state == Playing || playState.state == Repeating))
+        {
+            // play just audio
+            if (playState.state != Paused)
+            {
+                if (!m.musicWave->isOpen())
+                    m.musicWave->open(QIODevice::ReadOnly);
+
+                m.musicWave->reset();
+            }
+
+            playState.state = Playing;
+            activeSession->setPlaybackState(qtauSessionPlayback::Playing);
+            player->play(m.musicWave);
+        }
+        else vsLog::e("Controller is playing audio already, playback shouldn't be requested!");
+    }
+    else vsLog::e("Controller can't play anything - session has no audio data at all");
+}
+
+void qtauController::onRequestPausePlayback()
+{
+    if (playState.state == Playing || playState.state == Repeating)
+    {
+        playState.state = Paused;
+        activeSession->setPlaybackState(qtauSessionPlayback::Paused);
+        player->pause();
+    }
+    else vsLog::e("Controller isn't playing anything, can't pause playback.");
+}
+
+void qtauController::onRequestStopPlayback()
+{
+    if (playState.state == Playing || playState.state == Repeating)
+    {
+        playState.state = Stopped;
+        activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+        player->stop();
+    }
+    else vsLog::e("Controller isn't playing anything, can't pause playback.");
+}
+
+void qtauController::onRequestResetPlayback()
+{
+    player->stop();
+    playState.state = Stopped;
+    onRequestStartPlayback();
+}
+
+void qtauController::onRequestRepeatPlayback()
+{
+    //
 }

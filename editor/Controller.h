@@ -10,7 +10,7 @@ class qtauSynth;
 class qtmmPlayer;
 class qtauAudioSource;
 class qtauSession;
-class IResampler;
+class ISynth;
 
 
 // main class of QTau that ties everything together
@@ -36,10 +36,14 @@ public slots:
     void onLoadAudio(QString fileName);
     void onAudioPlaybackEnded();
 
-    void playAudio();
-    void stopAudio();
-    void backAudio();
-    void repeatAudio();
+    void onRequestSynthesis();
+    void onRequestStartPlayback();
+    void onRequestPausePlayback();
+    void onRequestStopPlayback();
+    void onRequestResetPlayback();
+    void onRequestRepeatPlayback();
+
+    void onVolumeChanged(int);
 
     void pianoKeyPressed(int,int);
     void pianoKeyReleased(int,int);
@@ -56,10 +60,10 @@ protected:
         Paused,
         Stopped,
         Repeating
-    } EPlayState;
+    } EPlayerState;
 
     typedef struct {
-        EPlayState       state;
+        EPlayerState     state;
         qtauAudioSource *audio;
         qtauSession     *session;
     } SPlayState;
@@ -70,8 +74,8 @@ protected:
     bool setupPlugins();
     bool setupVoicebanks();
 
-    void initResampler(IResampler *r);
-    QMap<QString, IResampler*> synths;
+    void initSynth(ISynth *s);
+    QMap<QString, ISynth*> synths;
 
     QDir pluginsDir;
 

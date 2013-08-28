@@ -1,11 +1,10 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include <QObject>
-#include <QMap>
+#include "editor/Utils.h"
+#include "editor/NoteEvents.h"
 
 #include "tools/utauloid/ust.h"
-#include "editor/NoteEvents.h"
 
 class qtauAudioSource;
 
@@ -42,18 +41,30 @@ public:
     void setModified(bool m);
     void setSaved(); // if doc was saved at this point
 
-    typedef enum {
-        nothingToPlay = 0,
-        stopped,
-        playing,
-        paused
-    } EPlayerState;
+    qtauSessionPlayback::EState playbackState() const { return playSt; }
+    void setPlaybackState(qtauSessionPlayback::EState state);
 
-    EPlayerState playerState() const { return playSt; }
+    typedef struct SVocalWaveSetup {
+        qtauAudioSource *vocalWave;
 
-    qtauAudioSource* getVocal() { return vocal; } // gotta be careful with pointers since they'll change on synth/drop
-    qtauAudioSource* getMusic() { return music; }
-    qtauAudioSource* getAudio(); // returns whatever is available, or a mixer if both are set
+        bool  needsSynthesis;
+        float volume;
+
+        SVocalWaveSetup() : vocalWave(0), needsSynthesis(true), volume(1) {}
+    } VocalWaveSetup;
+
+    typedef struct SMusicWaveSetup {
+        qtauAudioSource *musicWave;
+
+        qint64 offset;
+        int    tempo;
+        float  volume;
+
+        SMusicWaveSetup() : musicWave(0), offset(0), tempo(120), volume(1) {}
+    } MusicWaveSetup;
+
+    VocalWaveSetup& getVocal() { return vocal; }
+    MusicWaveSetup& getMusic() { return music; }
 
 signals:
     void modifiedStatus(bool); /// if document is modified
@@ -61,26 +72,37 @@ signals:
     void redoStatus    (bool); /// if can apply previously reverted action
 
     void dataReloaded();       /// when data is changed completely
+    void playbackStateChanged(qtauSessionPlayback::State);
 
     void vocalSet(); // when session gets synthesized audio from score
     void musicSet(); // when user adds bg (off-vocal?) music to play with synthesized vocals
-    void playbackTick(qint64 mcsecs);
-    void playbackFinished();
+
+    // signals to controller
+    void requestSynthesis(); // means synth & play
+    void requestStartPlayback();
+    void requestPausePlayback();
+    void requestStopPlayback();
+    void requestResetPlayback();
+    void requestRepeatPlayback();
 
 public slots:
     void onUIEvent(qtauEvent *);
-    void onPlaybackTick(qint64 mcsecs);
-    void onPlaybackFinished();
+
+    // received from UI
+    void startPlayback();
+    void stopPlayback();
+    void resetPlayback();
+    void repeatPlayback();
 
 protected:
-    bool parseUSTStrings(QStringList ustStrings);
+    bool    parseUSTStrings(QStringList ustStrings);
     QString filePath;
     QString docName;
     bool    isModified;
     bool    hadSavePoint; // if was saved having a non-empty event stack
 
-    qtauAudioSource *vocal;
-    qtauAudioSource *music;
+    VocalWaveSetup vocal;
+    MusicWaveSetup music;
 
     QMap<qint64, ust_note> noteMap; // need to store copies until changing data structure to something better
     ust data; // TODO: nite vector inside is obviously unsuitable, needs changing to something else
@@ -93,7 +115,7 @@ protected:
 
     void stackChanged();
 
-    EPlayerState playSt;
+    qtauSessionPlayback::EState playSt;
 };
 
 #endif // SESSION_H

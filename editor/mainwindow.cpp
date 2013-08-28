@@ -8,15 +8,16 @@
 #include "editor/Controller.h"
 #include "editor/Session.h"
 
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QScrollBar>
-#include <QtWidgets/QToolBar>
-#include <QtWidgets/QTabWidget>
-#include <QtWidgets/QSplitter>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QScrollArea>
-#include <QtWidgets/QTextEdit>
-#include <QtWidgets/QComboBox>
+#include <QGridLayout>
+#include <QScrollBar>
+#include <QToolBar>
+#include <QTabWidget>
+#include <QSplitter>
+#include <QGroupBox>
+#include <QScrollArea>
+#include <QTextEdit>
+#include <QComboBox>
+#include <QDial>
 
 #include <QFileDialog>
 
@@ -390,12 +391,25 @@ MainWindow::MainWindow(QWidget *parent) :
     playerTB->addAction(ui->actionBack);
     playerTB->addAction(ui->actionRepeat);
 
-    QLabel *quantizeLbl = new QLabel("  " + tr("Quantize") + ": ");
-    QLabel *lengthLbl   = new QLabel("  " + tr("Length") + ": ");
+    volume = new QSlider(Qt::Horizontal, this);
+    volume->setMaximum(100);
+    volume->setSingleStep(1);
+    volume->setPageStep(1);
+    volume->setValue(50);
+    volume->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    connect(playerTB, SIGNAL(orientationChanged(Qt::Orientation)), volume, SLOT(setOrientation(Qt::Orientation)));
+
+    muteBtn = new QAction(QIcon(":/images/speaker.png"), "", this);
+    muteBtn->setCheckable(true);
+    connect(muteBtn, SIGNAL(toggled(bool)), SLOT(onMute(bool)));
+
+    playerTB->addWidget(volume);
+    playerTB->addAction(muteBtn);
+
     QComboBox *quantizeCombo = new QComboBox(this);
     QComboBox *lengthCombo   = new QComboBox(this);
-    quantizeCombo->addItems(QStringList() << "1/4" << "1/8" << "1/16" << "1/32" << "1/64");
-    lengthCombo  ->addItems(QStringList() << "1/4" << "1/8" << "1/16" << "1/32" << "1/64");
+    quantizeCombo->addItems(QStringList() << "Q/4" << "Q/8" << "Q/16" << "Q/32" << "Q/64");
+    lengthCombo  ->addItems(QStringList() << "♪/4" << "♪/8" << "♪/16" << "♪/32" << "♪/64");
     quantizeCombo->setCurrentIndex(3);
     lengthCombo  ->setCurrentIndex(3);
     connect(quantizeCombo, SIGNAL(currentIndexChanged(int)), SLOT(onQuantizeSelected(int)));
@@ -403,9 +417,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     toolsTB->addAction(ui->actionEdit_Mode);
     toolsTB->addAction(ui->actionGrid_Snap);
-    toolsTB->addWidget(quantizeLbl);
+    toolsTB->addSeparator();
     toolsTB->addWidget(quantizeCombo);
-    toolsTB->addWidget(lengthLbl);
     toolsTB->addWidget(lengthCombo);
 
     addToolBar(fileTB);
@@ -480,21 +493,26 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     connect(doc, SIGNAL(undoStatus(bool)),     SLOT(onUndoStatus(bool)));
     connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onRedoStatus(bool)));
 
-    connect(doc, SIGNAL(onEvent(qtauEvent*)), SLOT(onDocEvent(qtauEvent*)));
+    connect(doc, SIGNAL(vocalSet()), SLOT(onVocalAudioChanged()));
+    connect(doc, SIGNAL(musicSet()), SLOT(onMusicAudioChanged()));
 
-    connect(doc, SIGNAL(vocalSet()),          SLOT(onVocalAudioChanged()));
-    connect(doc, SIGNAL(musicSet()),          SLOT(onMusicAudioChanged()));
+    connect(doc, SIGNAL(onEvent(qtauEvent*)),  SLOT(onDocEvent(qtauEvent*)));
+    connect(doc, SIGNAL(playbackStateChanged(qtauSessionPlayback::State)), SLOT(onPlaybackState(qtauSessionPlayback::State)));
+
+    connect(ui->actionPlay,   SIGNAL(triggered()), doc, SLOT(startPlayback ()));
+    connect(ui->actionStop,   SIGNAL(triggered()), doc, SLOT(stopPlayback  ()));
+    connect(ui->actionBack,   SIGNAL(triggered()), doc, SLOT(resetPlayback ()));
+    connect(ui->actionRepeat, SIGNAL(triggered()), doc, SLOT(repeatPlayback()));
+
     //-----------------------------------------------------------------------
 
-    connect(this, SIGNAL(loadUST(QString)), &c, SLOT(onLoadUST(QString)));
+    connect(this, SIGNAL(loadUST(QString)),      &c, SLOT(onLoadUST(QString)));
     connect(this, SIGNAL(saveUST(QString,bool)), &c, SLOT(onSaveUST(QString,bool)));
 
-    connect(this, SIGNAL(loadAudio(QString)), &c, SLOT(onLoadAudio(QString)));
-
-    connect(ui->actionPlay,   SIGNAL(triggered()), &c, SLOT(playAudio()));
-    connect(ui->actionStop,   SIGNAL(triggered()), &c, SLOT(stopAudio()));
-    connect(ui->actionBack,   SIGNAL(triggered()), &c, SLOT(backAudio()));
-    connect(ui->actionRepeat, SIGNAL(triggered()), &c, SLOT(repeatAudio()));
+    connect(this, SIGNAL(loadAudio(QString)),    &c, SLOT(onLoadAudio(QString)));
+    connect(volume, SIGNAL(valueChanged(int)),   &c, SLOT(onVolumeChanged(int)));
+    connect(this,   SIGNAL(setVolume(int)),      &c, SLOT(onVolumeChanged(int)));
+    c.onVolumeChanged(volume->value());
 
     //-----------------------------------------------------------------------
     connect(piano, SIGNAL(keyPressed(int,int)),  &c, SLOT(pianoKeyPressed (int,int)));
@@ -611,26 +629,47 @@ void MainWindow::onNoteEditorWidthChanged(int newWidth)
     hscr->setPageStep(noteEditor->geometry().width());
 }
 
-void MainWindow::onPlay(qint64 offset)
+void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
 {
-    offset += 0;
-    ui->actionPlay->setIcon(QIcon(":/images/b_pause.png"));
-    ui->actionPlay->setText(tr("Pause"));
-    playState = Playing;
-}
+    switch (state)
+    {
+    case qtauSessionPlayback::NothingToPlay:
+    case qtauSessionPlayback::NeedsSynthesis:
+        ui->actionPlay->setText(tr("Play"));
+        ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+        ui->actionPlay->setEnabled(false);
+        ui->actionStop->setEnabled(false);
+        ui->actionBack->setEnabled(false);
+        ui->actionRepeat->setEnabled(false);
 
-void MainWindow::onPause()
-{
-    ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
-    ui->actionPlay->setText(tr("Play"));
-    playState = Paused;
-}
+        ui->actionPlay->setChecked(false);
+        ui->actionRepeat->setChecked(false);
 
-void MainWindow::onStop()
-{
-    ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
-    ui->actionPlay->setText(tr("Play"));
-    playState = Stopped;
+        if (state == qtauSessionPlayback::NeedsSynthesis)
+            ui->actionPlay->setEnabled(true);
+
+        break;
+
+    case qtauSessionPlayback::Repeating: // this and following states imply that actions were enabled before
+    case qtauSessionPlayback::Playing:
+        ui->actionPlay->setIcon(QIcon(":/images/b_pause.png"));
+        ui->actionPlay->setText(tr("Pause"));
+        ui->actionStop->setEnabled(true);
+        ui->actionBack->setEnabled(true);
+        ui->actionRepeat->setEnabled(true);
+        break;
+
+    case qtauSessionPlayback::Stopped:
+        ui->actionPlay->setChecked(false);
+        ui->actionRepeat->setChecked(false);
+    case qtauSessionPlayback::Paused:
+        ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+        ui->actionPlay->setText(tr("Play"));
+        break;
+
+    default:
+        vsLog::e(QString("Window got unknown session playback state %1").arg(state));
+    }
 }
 
 void MainWindow::onUndo()
@@ -857,7 +896,7 @@ void MainWindow::onVocalAudioChanged()
 {
     // show vocal waveform panel and send audioSource to it for generation
     vocalWavePanel->setVisible(true);
-    vocalWave->setAudio(doc->getVocal());
+    vocalWave->setAudio(doc->getVocal().vocalWave);
 
     ui->actionPlay->setEnabled(true); // it isn't at startup because nothing to play
 }
@@ -866,7 +905,7 @@ void MainWindow::onMusicAudioChanged()
 {
     // show & fill music waveform panel
     musicWavePanel->setVisible(true);
-    musicWave->setAudio(doc->getMusic());
+    musicWave->setAudio(doc->getMusic().musicWave);
 
     ui->actionPlay->setEnabled(true);
 }
@@ -915,4 +954,14 @@ void MainWindow::dropEvent(QDropEvent *event)
                 vsLog::e("File extension not supported: " + fi.suffix());
         }
     }
+}
+
+void MainWindow::onMute(bool m)
+{
+    volume->setEnabled(!m);
+
+    if (m) muteBtn->setIcon(QIcon(":/images/speaker-mute.png"));
+    else   muteBtn->setIcon(QIcon(":/images/speaker.png"));
+
+    emit setVolume(m ? 0 : volume->value());
 }

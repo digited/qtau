@@ -99,4 +99,16 @@ inline quint32 read32_le(const quint8* b) { return read16_le(b) + (read16_le(b +
 inline quint32 read32_be(const quint8* b) { return (read16_be(b) << 16) + read16_be(b + 2); }
 
 
+namespace qtauSessionPlayback {
+    typedef enum State {
+        NothingToPlay = 0,
+        NeedsSynthesis,
+        Playing,
+        Paused,
+        Stopped,
+        Repeating
+    } EState;
+}
+
+
 #endif // UTILS_H

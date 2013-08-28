@@ -17,6 +17,7 @@ class qtauDynDrawer;
 class qtauDynLabel;
 class qtauWaveform;
 
+class QAction;
 class QScrollBar;
 class QSlider;
 class QToolBar;
@@ -54,8 +55,10 @@ signals:
     void saveUST(QString fileName, bool rewrite);
 
     void loadAudio(QString fileName);
+    void setVolume(int);
 
 public slots:
+    void onQuit();
     void onLog(const QString&, int);
     void onOpenUST();
     void onSaveUST();
@@ -75,11 +78,8 @@ public slots:
     void onPianoHeightChanged(int newHeight);
     void onNoteEditorWidthChanged(int newWidth);
 
-    void onQuit();
-
-    void onPlay(qint64 offset);
-    void onPause();
-    void onStop();
+    void onPlaybackState(qtauSessionPlayback::State state);
+    void onMute(bool m);
 
     void onUndo();
     void onRedo();
@@ -125,6 +125,8 @@ protected:
     QScrollBar     *hscr;
     QScrollBar     *vscr;
     QSlider        *zoom;
+    QSlider        *volume;
+    QAction        *muteBtn;
 
     QTextEdit      *logpad;
 

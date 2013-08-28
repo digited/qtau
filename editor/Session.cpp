@@ -10,18 +10,18 @@
 
 qtauSession::qtauSession(QObject *parent) :
     qtauEventManager(parent), docName(tr("Untitled")), isModified(false), hadSavePoint(false),
-    vocal(0), music(0)
+    playSt(qtauSessionPlayback::NothingToPlay)
 {
-    data.clear();
+    //
 }
 
 qtauSession::~qtauSession()
 {
-    if (vocal)
-        delete vocal;
+    if (vocal.vocalWave)
+        delete vocal.vocalWave;
 
-    if (music)
-        delete music;
+    if (music.musicWave)
+        delete music.musicWave;
 }
 
 qtauEvent_NoteAddition *util_makeAddNotesEvent(const ust &u)
@@ -325,25 +325,30 @@ void qtauSession::stackChanged()
 
 void qtauSession::setSynthesizedVocal(qtauAudioSource &s)
 {
-    if (vocal)
-        delete vocal;
+    if (playSt == qtauSessionPlayback::NothingToPlay)
+        playSt = qtauSessionPlayback::Stopped;
+    else if (playSt != qtauSessionPlayback::Stopped)
+        emit requestStopPlayback();
 
-    vocal = &s;
+    if (vocal.vocalWave)
+        delete vocal.vocalWave;
+
+    vocal.vocalWave = &s;
     emit vocalSet();
 }
 
 void qtauSession::setBackgroundAudio(qtauAudioSource &s)
 {
-    if (music)
-        delete music;
+    if (playSt == qtauSessionPlayback::NothingToPlay)
+        playSt = qtauSessionPlayback::Stopped;
+    else if (playSt != qtauSessionPlayback::Stopped)
+        emit requestStopPlayback();
 
-    music = &s;
+    if (music.musicWave)
+        delete music.musicWave;
+
+    music.musicWave = &s;
     emit musicSet();
-}
-
-void qtauSession::onPlaybackTick(qint64 mcsecs)
-{
-    emit playbackTick(mcsecs); // maybe intermediate is redundant for fastest ui response possible for playback...
 }
 
 void qtauSession::setModified(bool m)
@@ -374,24 +379,50 @@ void qtauSession::setSaved()
         vsLog::e("Saving an empty session?");
 }
 
-qtauAudioSource* qtauSession::getAudio()
+void qtauSession::startPlayback()
 {
-    qtauAudioSource *result = 0;
-
-    if (vocal && music)
+    switch (playSt)
     {
-        // TODO: make a mixer out of them, if not already
-    }
-    else
-    {
-        if (vocal) result = vocal;
-        else       result = music; // even if its 0
-    }
+    case qtauSessionPlayback::Playing:
+    case qtauSessionPlayback::Repeating:
+        emit requestPausePlayback();
+        break;
 
-    return result;
+    case qtauSessionPlayback::Paused:
+    case qtauSessionPlayback::Stopped:
+        emit requestStartPlayback();
+        break;
+
+    case qtauSessionPlayback::NeedsSynthesis:
+        emit requestSynthesis();
+        break;
+
+    case qtauSessionPlayback::NothingToPlay:
+    default:
+        vsLog::e(QString("Session was asked to start playback when nothing to play! %1").arg(playSt));
+    }
 }
 
-void qtauSession::onPlaybackFinished()
+void qtauSession::stopPlayback()
 {
-    emit playbackFinished(); // move it further to gui
+    emit requestStopPlayback();
+}
+
+void qtauSession::resetPlayback()
+{
+    emit requestResetPlayback();
+}
+
+void qtauSession::repeatPlayback()
+{
+    emit requestRepeatPlayback();
+}
+
+void qtauSession::setPlaybackState(qtauSessionPlayback::EState state)
+{
+    if (state != playSt) // may be called with same state on reset (playing -> playing)
+    {
+        playSt = state;
+        emit playbackStateChanged(playSt);
+    }
 }
