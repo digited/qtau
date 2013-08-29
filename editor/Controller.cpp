@@ -93,10 +93,12 @@ void qtauController::initSynth(ISynth *s)
 {
     if (!synths.contains(s->name()))
     {
+
+        SSynthConfig sconf(*vsLog::instance());
+        s->setup(sconf);
+
         vsLog::s("Adding synthesizer " + s->name());
         synths[s->name()] = s;
-
-        // TODO: do something
     }
     else vsLog::d("Synthesizer " + s->name() + " is already registered!");
 }

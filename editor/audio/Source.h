@@ -5,6 +5,19 @@
 #include <QBuffer>
 #include <QAudioBuffer>
 
+class vsLog;
+
+
+typedef struct WavegenSetup {
+    qint64 lengthMS;
+    float  frequencyHz;
+    int    sampleRate;
+    bool   stereo;
+
+    WavegenSetup(qint64 len, float freq, int sr, bool st = false) :
+        lengthMS(len), frequencyHz(freq), sampleRate(sr), stereo(st) {}
+} SWavegenSetup;
+
 
 class qtauAudioSource : public QBuffer
 {
@@ -13,6 +26,9 @@ class qtauAudioSource : public QBuffer
 public:
     explicit qtauAudioSource(QObject *parent = 0);
     explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
+
+    // generates tonal periodic wave
+    explicit qtauAudioSource(const SWavegenSetup &s, QObject *parent = 0);
     ~qtauAudioSource();
 
     QAudioBuffer getAudioBuffer() { return QAudioBuffer(this->buffer(), fmt); }
@@ -25,8 +41,6 @@ protected:
     QAudioFormat fmt; // format of that raw PCM data
 
 };
-
-//qtauAudioSource genWave(qint64 lenghMs, float frequencyHz, int sampleRate, bool stereo = false, QObject *parent = 0);
 
 
 #endif // QTAU_AUDIO_SOURCE_H
