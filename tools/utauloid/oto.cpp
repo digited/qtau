@@ -51,7 +51,7 @@ QOtoMap otoFromStrings(QStringList otoStrings)
     return result;
 }
 
-QStringList otoToStrings(QOtoMap om)
+QStringList otoToStrings(QOtoMap /*om*/)
 {
     QStringList result;
 
@@ -60,7 +60,7 @@ QStringList otoToStrings(QOtoMap om)
     return result;
 }
 
-QByteArray otoToBytes(QOtoMap om)
+QByteArray otoToBytes(QOtoMap /*om*/)
 {
     QByteArray result;
 
