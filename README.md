@@ -1,18 +1,10 @@
+Development moved to a [collab repo](http://github.com/qtau-devgroup/editor "QTau-devgroup @ GitHub").
+
 QTau
 ====
 
 Free opensource UTAU-like editor for singing synthesizers, uses Qt.
-* License: [WTFPL] [1]
+* License: BSD
 * Dependencies: Qt 5
 * OS: any supported by Qt
 
-Linked projects: [Rocaloid] [4], [LeSynth] [2], [lauloid] [3]
-
-Discussion: issues here, [utaforum thread] [5], [twitter] [6] or #vocadb at irc.rizon.net
-
-  [1]: http://wtfpl.net/about/                                   "wtfpl.net"
-  [2]: http://github.com/digited/lesynth                         "Le Synth"
-  [3]: http://gitorious.org/lauloid                              "lauloid"
-  [4]: http://github.com/Sleepwalking/Rocaloid                   "Rocaloid"
-  [5]: http://utaforum.net/thread-resampler-development-for-qtau "utaforum.net"
-  [6]: http://twitter.com/vocatuber                              "vocatuber @ twitter"
